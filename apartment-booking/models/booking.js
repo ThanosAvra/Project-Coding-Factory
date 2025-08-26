@@ -9,4 +9,5 @@ const bookingSchema = new mongoose.Schema({
   status: { type: String, enum: ['PENDING','CONFIRMED','CANCELLED'], default: 'PENDING' }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Booking', bookingSchema);
+// Avoid re-compilation error
+module.exports = mongoose.models.Booking || mongoose.model('Booking', bookingSchema);

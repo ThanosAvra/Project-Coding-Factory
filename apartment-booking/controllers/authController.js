@@ -5,7 +5,7 @@ const User = require('../models/user');
 
 const JWT_ISSUER = 'your-app';
 const JWT_AUDIENCE = 'your-app-users';
-const JWT_EXPIRES_IN = '8h';
+const JWT_EXPIRES_IN = '24h';
 const JWT_ALG = 'HS256';
 
 const signToken = (userId, role) => {

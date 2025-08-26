@@ -13,6 +13,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+// 🔹 Λήψη συγκεκριμένου διαμερίσματος (public)
+router.get('/:id', async (req, res) => {
+  try {
+    const apartment = await Apartment.findById(req.params.id).populate('owner', 'name email');
+    if (!apartment) {
+      return res.status(404).json({ error: 'Apartment not found' });
+    }
+    res.json(apartment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 🔹 Δημιουργία νέου διαμερίσματος (μόνο για ADMIN ή USER που είναι host)
 router.post('/', auth(['ADMIN', 'USER']), async (req, res) => {
   try {

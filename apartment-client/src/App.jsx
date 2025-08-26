@@ -1,15 +1,19 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import NewApartment from './pages/NewApartment';
-import MyBookings from './pages/MyBookings';
 import Booking from './pages/Booking';
-
+import MyBookings from './pages/MyBookings';
+import CreateApartment from './pages/CreateApartment';
+import Payment from './pages/Payment';
+import { ToastContainer } from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -40,37 +44,53 @@ function App() {
   return (
     <Router>
       {/* Navigation */}
-      <nav style={{ padding: '1rem', background: '#f5f5f5', marginBottom: '1rem' }}>
-        <Link to="/" style={{ marginRight: '1rem' }}>Αρχική</Link>
-        {token && (
-          <Link to="/my-bookings" style={{ marginRight: '1rem' }}>
-            Οι Κρατήσεις Μου
-          </Link>
-        )}
-        {token ? (
-          <>
-            <Link to="/new-apartment" style={{ marginRight: '1rem' }}>
-              Νέο Διαμέρισμα
-            </Link>
-            <button onClick={handleLogout}>Αποσύνδεση</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" style={{ marginRight: '1rem' }}>Σύνδεση</Link>
-            <Link to="/register">Εγγραφή</Link>
-          </>
-        )}
+      <nav className="navbar">
+        <div className="container">
+          <div className="d-flex justify-between align-center">
+            <div className="d-flex align-center" style={{ gap: '1rem' }}>
+              <Link to="/" className="nav-link" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
+                🏠 ApartmentBooking
+              </Link>
+            </div>
+            
+            <div className="d-flex align-center" style={{ gap: '0.5rem' }}>
+              <Link to="/" className="nav-link">Αρχική</Link>
+              {token ? (
+                <>
+                  <Link to="/create-apartment" className="btn btn-success btn-sm">+ Νέο Διαμέρισμα</Link>
+                  <Link to="/my-bookings" className="btn btn-outline btn-sm">Οι Κρατήσεις μου</Link>
+                  <button onClick={handleLogout} className="btn btn-danger btn-sm">Αποσύνδεση</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="btn btn-outline btn-sm">Σύνδεση</Link>
+                  <Link to="/register" className="btn btn-primary btn-sm">Εγγραφή</Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </nav>
 
-      {/* Routes */}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/new-apartment" element={<NewApartment />} />
-        <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/booking/:id" element={<Booking />} />
-      </Routes>
+      {/* Main Content */}
+      <main className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div className="container">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/booking/:id" element={<Booking />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/create-apartment" element={<CreateApartment />} />
+              <Route path="/payment" element={<Payment />} />
+            </Routes>
+          </ErrorBoundary>
+        </div>
+      </main>
+
+      {/* Toast Notifications */}
+      <ToastContainer />
     </Router>
   );
 }

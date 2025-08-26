@@ -1,11 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const Booking = require('../models/Booking');
-const Apartment = require('../models/Apartment');
+const Booking = require('../models/booking');
+const Apartment = require('../models/apartment');
 const auth = require('../middleware/auth');
 
 // 📄 Λίστα όλων των κρατήσεων του τρέχοντος χρήστη
 router.get('/', auth(), async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user.id })
+      .populate('apartment', 'title location');
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 📄 Λίστα όλων των κρατήσεων του τρέχοντος χρήστη (alternative endpoint)
+router.get('/my', auth(), async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user.id })
       .populate('apartment', 'title location');

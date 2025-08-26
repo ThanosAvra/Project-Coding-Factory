@@ -2,6 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { swaggerUi, specs } = require('./swagger');
+
+// Import routes at the top level to avoid re-compilation issues
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const apartmentRoutes = require('./routes/apartments');
+const bookingRoutes = require('./routes/bookings');
 
 const app = express();
 
@@ -30,6 +37,24 @@ async function start() {
     });
     console.log('✔ MongoDB connected');
 
+
+    // Swagger API Documentation
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+      explorer: true,
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'Apartment Booking API Documentation'
+    }));
+
+    app.use('/api/auth', authRoutes);
+    app.use('/api/users', userRoutes);
+    app.use('/api/apartments', apartmentRoutes);
+    app.use('/api/bookings', bookingRoutes);
+
+    app.get('/health', (req, res) => {
+      const state = ['disconnected','connected','connecting','disconnecting'][mongoose.connection.readyState] || 'unknown';
+      res.json({ dbState: state });
+    });
+
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
@@ -38,16 +63,5 @@ async function start() {
     process.exit(1);
   }
 }
-
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/apartments', require('./routes/apartments'));
-
-// Health check
-app.get('/health', (req, res) => {
-  const state = ['disconnected','connected','connecting','disconnecting'][mongoose.connection.readyState] || 'unknown';
-  res.json({ dbState: state });
-});
 
 start();

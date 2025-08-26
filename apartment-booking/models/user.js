@@ -15,4 +15,5 @@ userSchema.methods.validPassword = function(password) {
   return bcrypt.compare(password, this.passwordHash);
 };
 
-module.exports = mongoose.model('User', userSchema);
+// Avoid re-compilation error
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
