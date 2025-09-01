@@ -132,9 +132,6 @@ export default function Payment() {
     setProcessing(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       // Create booking with payment info
       const bookingData = {
         apartmentId: bookingInfo.apartmentId,
@@ -142,25 +139,42 @@ export default function Payment() {
         endDate: bookingInfo.endDate,
         totalPrice: bookingInfo.totalPrice,
         paymentMethod: paymentData.paymentMethod,
-        paymentStatus: 'COMPLETED'
+        paymentStatus: 'COMPLETED',
+        paymentId: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        notes: 'Πληρωμή μέσω πιστωτικής κάρτας'
       };
 
+      // Create and confirm booking in a single request
       const response = await axios.post('/bookings', bookingData);
-      
-      // Update booking status to CONFIRMED since payment is completed
-      await axios.put(`/bookings/${response.data._id}/confirm`);
       
       toast.success('🎉 Πληρωμή επιτυχής! Η κράτησή σας επιβεβαιώθηκε!');
       
-      // Redirect to my bookings
-      try { sessionStorage.removeItem('bookingInfo'); } catch (_) {}
+      // Clear stored booking info on success
+      try { 
+        sessionStorage.removeItem('bookingInfo'); 
+        localStorage.removeItem('bookingInfo');
+      } catch (_) {}
+      
+      // Redirect to my bookings after a short delay
       setTimeout(() => {
-        navigate('/my-bookings');
-      }, 2000);
+        navigate('/my-bookings', { 
+          state: { 
+            bookingConfirmed: true,
+            bookingId: response.data._id 
+          } 
+        });
+      }, 1500);
       
     } catch (err) {
       console.error('Payment error:', err);
-      toast.error(err.response?.data?.error || 'Σφάλμα κατά την πληρωμή');
+      const errorMessage = err.response?.data?.error || 'Σφάλμα κατά την πληρωμή';
+      toast.error(errorMessage);
+      
+      // If booking was created but confirmation failed, show specific message
+      if (err.response?.data?.bookingId) {
+        toast.warning('Η πληρωμή ολοκληρώθηκε αλλά υπήρξε πρόβλημα με την επιβεβαίωση. Παρακαλώ ελέγξτε τις κρατήσεις σας.');
+        navigate('/my-bookings');
+      }
     } finally {
       setProcessing(false);
     }

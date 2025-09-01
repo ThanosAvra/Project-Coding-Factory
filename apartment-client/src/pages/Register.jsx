@@ -48,35 +48,27 @@ export default function Register() {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '70vh' 
-    }}>
-      <div className="card" style={{ width: '100%', maxWidth: '450px' }}>
-        <div className="card-header text-center">
-          <h2 style={{ 
-            margin: 0,
-            background: 'var(--secondary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            ✨ Εγγραφή
-          </h2>
-          <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)' }}>
-            Δημιουργήστε τον λογαριασμό σας
-          </p>
-        </div>
-        
-        <div className="card-body">
-          <form onSubmit={handleRegister}>
-            <div className="form-group">
-              <label className="form-label">👤 Όνομα:</label>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <div className="p-6 sm:p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              ✨ Εγγραφή
+            </h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              Δημιουργήστε τον λογαριασμό σας
+            </p>
+          </div>
+          
+          <form className="space-y-6" onSubmit={handleRegister}>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                👤 Όνομα:
+              </label>
               <input
+                id="name"
                 type="text"
-                className="form-input"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Εισάγετε το όνομά σας"
@@ -85,11 +77,14 @@ export default function Register() {
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">📧 Email:</label>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                📧 Email:
+              </label>
               <input
+                id="email"
                 type="email"
-                className="form-input"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Εισάγετε το email σας"
@@ -98,73 +93,65 @@ export default function Register() {
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">🔒 Κωδικός:</label>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                🔑 Κωδικός:
+              </label>
               <input
+                id="password"
                 type="password"
-                className="form-input"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Τουλάχιστον 6 χαρακτήρες"
+                placeholder="Εισάγετε κωδικό"
                 required
                 disabled={loading}
-                minLength={6}
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">🔐 Επιβεβαίωση Κωδικού:</label>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                ✅ Επιβεβαίωση κωδικού:
+              </label>
               <input
+                id="confirmPassword"
                 type="password"
-                className="form-input"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Επαναλάβετε τον κωδικό"
+                placeholder="Επαναλάβετε τον κωδικό σας"
                 required
                 disabled={loading}
               />
             </div>
             
-            <button 
-              type="submit" 
-              className="btn btn-secondary w-full"
-              disabled={loading}
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              {loading ? (
-                <>
-                  <LoadingSpinner size="sm" color="white" />
-                  Εγγραφή...
-                </>
-              ) : (
-                <>
-                  <span>🎉</span>
-                  Εγγραφή
-                </>
-              )}
-            </button>
+            <div className="pt-2">
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner />
+                    <span className="ml-2">Επεξεργασία...</span>
+                  </>
+                ) : 'Εγγραφή'}
+              </button>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Έχετε ήδη λογαριασμό;{' '}
+                <Link 
+                  to="/login" 
+                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                >
+                  Σύνδεση
+                </Link>
+              </p>
+            </div>
           </form>
-        </div>
-        
-        <div className="card-footer text-center">
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-            Έχετε ήδη λογαριασμό;{' '}
-            <Link 
-              to="/login" 
-              style={{ 
-                color: 'var(--primary-color)', 
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}
-            >
-              Συνδεθείτε εδώ
-            </Link>
-          </p>
         </div>
       </div>
     </div>

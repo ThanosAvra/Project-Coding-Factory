@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { useContext } from 'react';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -10,69 +9,95 @@ import CreateApartment from './pages/CreateApartment';
 import Payment from './pages/Payment';
 import { ToastContainer } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import { AuthContext } from './context/AuthContext.jsx';
 
-function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [userRole, setUserRole] = useState(null);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setToken(localStorage.getItem('token'));
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also check for token changes periodically
-    const interval = setInterval(() => {
-      const currentToken = localStorage.getItem('token');
-      if (currentToken !== token) {
-        setToken(currentToken);
-      }
-    }, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [token]);
+function Navigation() {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/';
+    logout();
+    navigate('/');
   };
 
   return (
-    <Router>
-      {/* Navigation */}
-      <nav className="navbar">
-        <div className="container">
-          <div className="d-flex justify-between align-center">
-            <div className="d-flex align-center" style={{ gap: '1rem' }}>
-              <Link to="/" className="nav-link" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
-                🏠 ApartmentBooking
-              </Link>
-            </div>
-            
-            <div className="d-flex align-center" style={{ gap: '0.5rem' }}>
-              <Link to="/" className="nav-link">Αρχική</Link>
-              {token ? (
-                <>
-                  <Link to="/create-apartment" className="btn btn-success btn-sm">+ Νέο Διαμέρισμα</Link>
-                  <Link to="/my-bookings" className="btn btn-outline btn-sm">Οι Κρατήσεις μου</Link>
-                  <button onClick={handleLogout} className="btn btn-danger btn-sm">Αποσύνδεση</button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="btn btn-outline btn-sm">Σύνδεση</Link>
-                  <Link to="/register" className="btn btn-primary btn-sm">Εγγραφή</Link>
-                </>
-              )}
-            </div>
+    <nav className="navbar">
+      <div className="container">
+        <div className="d-flex justify-between align-center">
+          <div className="d-flex align-center" style={{ gap: '1rem' }}>
+            <Link to="/" className="nav-link" style={{ fontSize: '1.25rem', fontWeight: '700' }}>
+              🏠 ApartmentBooking
+            </Link>
+          </div>
+          
+          <div className="d-flex align-center" style={{ gap: '1rem' }}>
+            <Link to="/" className="nav-link">Αρχική</Link>
+            {user ? (
+              <>
+                <div className="nav-user" style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--border-radius-sm)',
+                  background: 'rgba(255, 255, 255, 0.1)'
+                }}>
+                  <span className="user-avatar" style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'var(--primary-gradient)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem'
+                  }}>
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                  <span className="user-name" style={{
+                    fontWeight: 600,
+                    color: 'var(--text-white)',
+                    fontSize: '0.9375rem'
+                  }}>
+                    {user.name || 'Χρήστης'}
+                  </span>
+                </div>
+                <Link to="/my-bookings" className="nav-link">Οι Κρατήσεις μου</Link>
+                {user.role === 'ADMIN' && (
+                  <Link to="/create-apartment" className="nav-link">Δημιουργία Διαμερίσματος</Link>
+                )}
+                <button 
+                  onClick={handleLogout} 
+                  className="btn btn-link nav-link"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <span>Αποσύνδεση</span>
+                  <span>🚪</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="nav-link">Σύνδεση</Link>
+                <Link to="/register" className="nav-link">Εγγραφή</Link>
+              </>
+            )}
           </div>
         </div>
-      </nav>
+      </div>
+    </nav>
+  );
+}
 
-      {/* Main Content */}
+function App() {
+  return (
+    <Router>
+      <Navigation />
       <main className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div className="container">
           <ErrorBoundary>
@@ -88,8 +113,6 @@ function App() {
           </ErrorBoundary>
         </div>
       </main>
-
-      {/* Toast Notifications */}
       <ToastContainer />
     </Router>
   );

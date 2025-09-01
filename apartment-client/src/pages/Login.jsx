@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from '../api/axios';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { toast } from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,16 +11,39 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { login } = useAuth();
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      console.log('Attempting login with:', { email, password });
+      console.log('Attempting login with:', { email });
       const res = await axios.post('/auth/login', { email, password });
       console.log('Login response:', res.data);
-      localStorage.setItem('token', res.data.token);
-      toast.success('Επιτυχής σύνδεση! Καλώς ήρθατε!');
+      
+      if (!res.data.token) {
+        throw new Error('No token received');
+      }
+      
+      // Extract user data from response
+      const userData = res.data.user || {};
+      
+      // Ensure we have all required user fields
+      const user = {
+        id: userData.id || userData._id,
+        name: userData.name || email.split('@')[0],
+        email: userData.email || email,
+        role: userData.role || 'USER'
+      };
+      
+      // Call the login function from AuthContext
+      login(user, res.data.token);
+      
+      // Show success message
+      toast.success(`Καλώς ήρθατε, ${user.name}!`);
+      
+      // Redirect to home page
       navigate('/');
       window.location.reload(); // Force reload to update navigation
     } catch (err) {

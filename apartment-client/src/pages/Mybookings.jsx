@@ -1,14 +1,79 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { toast } from '../components/Toast';
+import { format, isAfter, isBefore } from 'date-fns';
+
+// Set the default locale for date-fns
+import styled from 'styled-components';
+
+const BookingCard = styled.div`
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 1rem;
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+`;
+
+// Status configuration
+const STATUS_CONFIG = {
+  PENDING: {
+    text: '⏳ Εκκρεμεί',
+    className: 'bg-warning text-dark',
+    icon: '⏳',
+    color: 'var(--warning)'
+  },
+  CONFIRMED: {
+    text: '✅ Επιβεβαιωμένη',
+    className: 'bg-success text-white',
+    icon: '✓',
+    color: 'var(--success)'
+  },
+  CANCELLED: {
+    text: '❌ Ακυρώθηκε',
+    className: 'bg-danger text-white',
+    icon: '✕',
+    color: 'var(--danger)'
+  }
+};
+
+// Status order for grouping
+const STATUS_ORDER = [
+  'CONFIRMED',
+  'PENDING',
+  'CANCELLED'
+];
+
+// Helper function to format dates consistently
+const formatDate = (dateString) => {
+  try {
+    return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+};
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check for successful booking confirmation from navigation state
+  useEffect(() => {
+    if (location.state?.bookingConfirmed) {
+      toast.success('Η κράτησή σας επιβεβαιώθηκε με επιτυχία!');
+      // Clear the state to prevent showing the message again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchBookings();
@@ -46,209 +111,212 @@ export default function MyBookings() {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      confirmed: { color: 'var(--success-gradient)', text: '✅ Επιβεβαιωμένη', textColor: 'white' },
-      cancelled: { color: 'var(--error-gradient)', text: '❌ Ακυρωμένη', textColor: 'white' },
-      pending: { color: 'var(--warning-gradient)', text: '⏳ Εκκρεμής', textColor: 'white' }
-    };
-
-    const config = statusConfig[status] || statusConfig.pending;
+  const renderBookingCard = (booking) => {
+    const status = booking.status || 'PENDING';
+    const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
+    const startDate = new Date(booking.startDate);
+    const endDate = new Date(booking.endDate);
+    const now = new Date();
+    
+    // Fix date comparisons
+    const isUpcoming = isAfter(startDate, now);
+    const isActive = isBefore(now, endDate) && isAfter(now, startDate);
+    const isPast = isAfter(now, endDate);
 
     return (
-      <span style={{
-        background: config.color,
-        color: config.textColor,
-        padding: '0.25rem 0.75rem',
-        borderRadius: '20px',
-        fontSize: '0.875rem',
-        fontWeight: '600',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.25rem'
-      }}>
-        {config.text}
-      </span>
+      <BookingCard key={booking._id} className="card">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-start">
+            <div className="flex-grow-1">
+              <div className="d-flex justify-content-between align-items-start">
+                <h5 className="card-title mb-1">
+                  {booking.apartment?.title || 'Δεν βρέθηκε διαμέρισμα'}
+                </h5>
+                <div className="d-flex flex-column gap-2">
+                  {(status === 'PENDING' || status === 'CONFIRMED') && isUpcoming && (
+                    <button
+                      onClick={() => handleCancelBooking(booking._id)}
+                      className="btn btn-outline-danger btn-sm"
+                      disabled={cancellingId === booking._id}
+                    >
+                      {cancellingId === booking._id ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-1" />
+                          Ακύρωση...
+                        </>
+                      ) : (
+                        'Ακύρωση Κράτησης'
+                      )}
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => navigate(`/apartments/${booking.apartment?._id}`)}
+                    className="btn btn-outline-primary btn-sm"
+                  >
+                    👁️ Προβολή
+                  </button>
+                </div>
+              </div>
+              <p className="text-muted small mb-2">
+                <span className="me-2">📅</span>
+                {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+              </p>
+              <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span 
+                  className={`badge ${statusInfo.className} d-flex align-items-center gap-1`}
+                  style={{
+                    padding: '0.35em 0.65em',
+                    fontSize: '0.85em',
+                    fontWeight: 600
+                  }}
+                >
+                  <span>{statusInfo.icon}</span>
+                  <span>{statusInfo.text}</span>
+                </span>
+                {isActive && (
+                  <span 
+                    className="badge d-flex align-items-center gap-1"
+                    style={{
+                      background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                      color: 'white',
+                      padding: '0.35em 0.65em',
+                      fontSize: '0.85em',
+                      fontWeight: 600
+                    }}
+                  >
+                    <span>🔴</span> Σε εξέλιξη
+                  </span>
+                )}
+                {isUpcoming && (
+                  <span 
+                    className="badge d-flex align-items-center gap-1"
+                    style={{
+                      background: 'linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%)',
+                      color: 'white',
+                      padding: '0.35em 0.65em',
+                      fontSize: '0.85em',
+                      fontWeight: 600
+                    }}
+                  >
+                    <span>⏳</span> Προσεχώς
+                  </span>
+                )}
+                {isPast && (
+                  <span 
+                    className="badge d-flex align-items-center gap-1"
+                    style={{
+                      background: 'linear-gradient(135deg, #6c757d 0%, #495057 100%)',
+                      color: 'white',
+                      padding: '0.35em 0.65em',
+                      fontSize: '0.85em',
+                      fontWeight: 600
+                    }}
+                  >
+                    <span>✅</span> Ολοκληρώθηκε
+                  </span>
+                )}
+              </div>
+              <div className="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                  <p className="mb-1">
+                    <strong>Σύνολο:</strong> {booking.totalPrice?.toFixed(2)}€
+                  </p>
+                  <p className="text-muted small mb-0">
+                    Κωδικός: {booking._id.substring(18).toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </BookingCard>
     );
   };
 
   if (loading) {
     return (
-      <div className="text-center" style={{ padding: '3rem' }}>
-        <LoadingSpinner size="lg" />
-        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>
-          Φόρτωση των κρατήσεών σας...
-        </p>
+      <div className="text-center py-5">
+        <LoadingSpinner />
+        <p className="mt-3">Φόρτωση κρατήσεων...</p>
       </div>
     );
   }
 
+  // Group bookings by status
+  const groupedBookings = bookings.reduce((acc, booking) => {
+    const status = booking.status || 'PENDING';
+    if (!acc[status]) {
+      acc[status] = [];
+    }
+    acc[status].push(booking);
+    return acc;
+  }, {});
+
+  // Sort bookings within each status group by date (newest first)
+  Object.values(groupedBookings).forEach(group => {
+    group.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  });
+
   if (bookings.length === 0) {
     return (
-      <div className="text-center" style={{ padding: '3rem' }}>
-        <div style={{ 
-          background: 'var(--primary-gradient)',
-          borderRadius: 'var(--border-radius-lg)',
-          padding: '3rem 2rem',
-          color: 'white',
-          maxWidth: '500px',
-          margin: '0 auto'
-        }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📅</div>
-          <h2 style={{ margin: '0 0 1rem 0' }}>Δεν έχετε κρατήσεις</h2>
-          <p style={{ margin: '0 0 2rem 0', opacity: 0.9 }}>
-            Κάντε την πρώτη σας κράτηση για να τη δείτε εδώ!
-          </p>
-          <button 
-            onClick={() => navigate('/')}
-            className="btn"
-            style={{ 
-              background: 'white',
-              color: 'var(--primary-color)',
-              fontWeight: '600'
-            }}
-          >
-            🏠 Περιήγηση Διαμερισμάτων
-          </button>
+      <div className="text-center py-5">
+        <div className="card">
+          <div className="card-body py-5">
+            <h2>Δεν βρέθηκαν κρατήσεις</h2>
+            <p className="text-muted mt-3">
+              Δεν έχετε κάνει ακόμα κρατήσεις. Ξεκινήστε τώρα!
+            </p>
+            <button 
+              className="btn btn-primary mt-3"
+              onClick={() => navigate('/')}
+            >
+              🔍 Βρείτε Διαμέρισμα
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <div className="text-center mb-4">
-        <h1 style={{ 
-          background: 'var(--primary-gradient)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
-          📋 Οι Κρατήσεις μου
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0">
+          <span className="gradient-text">Οι Κρατήσεις μου</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Διαχειριστείτε τις κρατήσεις σας
-        </p>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/')}
+        >
+          🔍 Νέα Κράτηση
+        </button>
       </div>
 
-      <div style={{ display: 'grid', gap: '1.5rem' }}>
-        {bookings.map(booking => (
-          <div key={booking._id} className="card">
-            <div className="card-body">
-              <div className="booking-card-grid" style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr auto', 
-                gap: '1rem',
-                alignItems: 'start'
-              }}>
-                <div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '1rem',
-                    marginBottom: '1rem'
-                  }}>
-                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>
-                      {booking.apartment?.title || 'Διαμέρισμα'}
-                    </h3>
-                    {getStatusBadge(booking.status)}
-                  </div>
+      {STATUS_ORDER.map(status => {
+        const bookingsInStatus = groupedBookings[status] || [];
+        if (bookingsInStatus.length === 0) return null;
 
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                    gap: '1rem',
-                    marginBottom: '1rem'
-                  }}>
-                    <div>
-                      <p style={{ 
-                        margin: '0.25rem 0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <span>📍</span>
-                        <strong>Τοποθεσία:</strong> {booking.apartment?.location}
-                      </p>
-                      
-                      <p style={{ 
-                        margin: '0.25rem 0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <span>📅</span>
-                        <strong>Ημερομηνίες:</strong> 
-                        {new Date(booking.startDate).toLocaleDateString('el-GR')} - 
-                        {new Date(booking.endDate).toLocaleDateString('el-GR')}
-                      </p>
-                    </div>
-
-                    <div>
-                      <div style={{
-                        background: 'var(--success-gradient)',
-                        color: 'white',
-                        padding: '0.75rem 1rem',
-                        borderRadius: 'var(--border-radius)',
-                        textAlign: 'center'
-                      }}>
-                        <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Συνολικό Κόστος</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>
-                          💰 {booking.totalPrice}€
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
+        
+        return (
+          <div key={status} className="mb-4">
+            <h5 className="d-flex align-items-center gap-2 mb-3">
+              <span className={`badge ${statusInfo.className} d-flex align-items-center`}>
+                {statusInfo.icon} {statusInfo.text}
+              </span>
+              <span className="text-muted">({bookingsInStatus.length})</span>
+            </h5>
+            
+            <div className="row g-3">
+              {bookingsInStatus.map(booking => (
+                <div key={booking._id} className="col-12">
+                  {renderBookingCard(booking)}
                 </div>
-
-                <div className="booking-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {booking.status === 'confirmed' && (
-                    <button 
-                      onClick={() => handleCancelBooking(booking._id)}
-                      className="btn btn-danger"
-                      disabled={cancellingId === booking._id}
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        minWidth: '150px'
-                      }}
-                    >
-                      {cancellingId === booking._id ? (
-                        <>
-                          <LoadingSpinner size="sm" color="white" />
-                          Ακύρωση...
-                        </>
-                      ) : (
-                        <>
-                          <span>🗑️</span>
-                          Ακύρωση
-                        </>
-                      )}
-                    </button>
-                  )}
-                  
-                  <button 
-                    onClick={() => navigate(`/booking/${booking.apartment?._id}`)}
-                    className="btn btn-outline"
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      minWidth: '150px'
-                    }}
-                  >
-                    <span>👁️</span>
-                    Προβολή
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
