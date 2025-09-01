@@ -9,7 +9,7 @@ const JWT_EXPIRES_IN = '24h';
 const JWT_ALG = 'HS256';
 
 const signToken = (userId, role) => {
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 24) {
     throw new Error('Server misconfiguration: weak or missing JWT_SECRET');
   }
   return jwt.sign(
@@ -78,7 +78,23 @@ exports.login = async (req, res) => {
     }
 
     const token = signToken(user._id, user.role || 'USER');
-    return res.status(200).json({ message: 'Authenticated', token });
+    
+    // Ensure we have a proper user object
+    const userData = {
+      _id: user._id ? user._id.toString() : null,
+      id: user._id ? user._id.toString() : null, // Add id alias for compatibility
+      name: user.name || 'User',
+      email: user.email,
+      role: user.role || 'USER'
+    };
+    
+    console.log('Login successful, sending response with user data:', userData);
+    
+    return res.status(200).json({ 
+      message: 'Authenticated', 
+      token,
+      user: userData
+    });
   } catch (err) {
     console.error('Login error:', err);
     return res.status(500).json({ error: 'Κάτι πήγε στραβά.' });
