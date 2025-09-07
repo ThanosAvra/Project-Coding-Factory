@@ -1,37 +1,42 @@
 // routes/users.js
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const User = require('../models/user');
+const { register, login, getMe, updateUserProfile, getUsers, promoteToAdmin, createFirstAdmin } = require('../controllers/userController');
+const { auth } = require('../middleware/auth');
 
-// POST /api/users/register
-router.post('/register', async (req, res) => {
-  try {
-    const { username, password } = req.body;
+// @route   POST /api/users/register
+// @desc    Register user
+// @access  Public
+router.post('/register', register);
 
-    // Έλεγχος αν λείπουν πεδία
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Όνομα χρήστη και κωδικός είναι υποχρεωτικά' });
-    }
+// @route   POST /api/users/login
+// @desc    Authenticate user & get token
+// @access  Public
+router.post('/login', login);
 
-    // Έλεγχος αν υπάρχει ήδη ο χρήστης
-    const existingUser = await User.findOne({ email: username });
-    if (existingUser) {
-      return res.status(409).json({ error: 'Το όνομα χρήστη υπάρχει ήδη' });
-    }
+// @route   POST /api/users/create-admin
+// @desc    Create first admin user (only if no admins exist)
+// @access  Public (but only works if no admins exist)
+router.post('/create-admin', createFirstAdmin);
 
-    // Κρυπτογράφηση κωδικού
-    const hashedPassword = await bcrypt.hash(password, 10);
+// @route   GET /api/users/me
+// @desc    Get current user
+// @access  Private
+router.get('/me', auth(), getMe);
 
-    // Δημιουργία νέου χρήστη
-    const newUser = new User({ name: username, email: username, passwordHash: hashedPassword });
-    await newUser.save();
+// @route   PUT /api/users/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', auth(), updateUserProfile);
 
-    res.status(201).json({ message: 'Εγγραφή επιτυχής' });
-  } catch (err) {
-    console.error('Σφάλμα στην εγγραφή:', err);
-    res.status(500).json({ error: 'Κάτι πήγε στραβά στον server' });
-  }
-});
+// @route   PUT /api/users/promote/:id
+// @desc    Promote user to admin
+// @access  Private/Admin
+router.put('/promote/:id', auth(['ADMIN']), promoteToAdmin);
+
+// @route   GET /api/users
+// @desc    Get all users (Admin only)
+// @access  Private/Admin
+router.get('/', auth(['ADMIN']), getUsers);
 
 module.exports = router;

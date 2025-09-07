@@ -11,7 +11,7 @@ const bookingSchema = new mongoose.Schema({
     enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'PAYMENT_PENDING', 'PAYMENT_COMPLETED'], 
     default: 'PENDING' 
   },
-  paymentMethod: { type: String, enum: ['credit_card', 'stripe', 'bank_transfer', 'cash'], default: 'credit_card' },
+  paymentMethod: { type: String, enum: ['credit_card', 'stripe', 'bank_transfer', 'cash', 'mock'], default: 'credit_card' },
   paymentStatus: { 
     type: String, 
     enum: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'], 

@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Apartment = require('../models/apartment');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
-// 🔹 Λίστα όλων των διαμερισμάτων (public)
+// Λίστα όλων των διαμερισμάτων (public)
 router.get('/', async (req, res) => {
   try {
     const apartments = await Apartment.find().populate('owner', 'name email');
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 🔹 Λήψη συγκεκριμένου διαμερίσματος (public)
+// Λήψη συγκεκριμένου διαμερίσματος (public)
 router.get('/:id', async (req, res) => {
   try {
     const apartment = await Apartment.findById(req.params.id).populate('owner', 'name email');
@@ -26,7 +26,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// 🔹 Δημιουργία νέου διαμερίσματος (μόνο για ADMIN ή USER που είναι host)
+// Δημιουργία νέου διαμερίσματος (μόνο για ADMIN ή USER που είναι host)
 router.post('/', auth(['ADMIN', 'USER']), async (req, res) => {
   try {
     const { title, location, pricePerNight } = req.body;
@@ -42,7 +42,7 @@ router.post('/', auth(['ADMIN', 'USER']), async (req, res) => {
   }
 });
 
-// 🔹 Ενημέρωση διαμερίσματος (μόνο ιδιοκτήτης ή ADMIN)
+// Ενημέρωση διαμερίσματος (μόνο ιδιοκτήτης ή ADMIN)
 router.put('/:id', auth(['ADMIN', 'USER']), async (req, res) => {
   try {
     const apt = await Apartment.findById(req.params.id);
@@ -60,7 +60,7 @@ router.put('/:id', auth(['ADMIN', 'USER']), async (req, res) => {
   }
 });
 
-// 🔹 Διαγραφή διαμερίσματος
+// Διαγραφή διαμερίσματος
 router.delete('/:id', auth(['ADMIN', 'USER']), async (req, res) => {
   try {
     const apt = await Apartment.findById(req.params.id);

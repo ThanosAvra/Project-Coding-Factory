@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { toast } from '../components/Toast';
 import { useUser } from '../context/UserContext';
 
-function Register() {
+function CreateAdmin() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,25 +34,20 @@ function Register() {
     setLoading(true);
     
     try {
-      const { confirmPassword, ...userData } = formData;
-      const response = await axios.post('/users/register', userData);
-      const { token } = response.data;
+      const { confirmPassword, ...adminData } = formData;
+      const response = await axios.post('/users/create-admin', adminData);
+      const { token, user } = response.data;
       
-      // Get user data after registration
-      const userResponse = await axios.get('/users/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Automatically log in the admin user
+      login(user, token);
       
-      // Automatically log in the user after registration
-      login(userResponse.data, token);
+      toast.success('Πρώτος admin χρήστης δημιουργήθηκε επιτυχώς!');
       
-      toast.success('Επιτυχής εγγραφή! Καλώς ήρθατε!');
-      
-      // Redirect to home page
-      navigate('/');
+      // Redirect to admin dashboard
+      navigate('/admin');
     } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Σφάλμα κατά την εγγραφή';
+      console.error('Create admin error:', error);
+      const errorMessage = error.response?.data?.message || 'Σφάλμα κατά τη δημιουργία admin';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -60,7 +55,7 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen d-flex align-items-center justify-content-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '2rem 1rem' }}>
+    <div className="min-h-screen d-flex align-items-center justify-content-center" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', padding: '2rem 1rem' }}>
       <div className="auth-card" style={{ 
         maxWidth: '450px', 
         width: '100%',
@@ -71,16 +66,16 @@ function Register() {
         border: 'none'
       }}>
         <div className="text-center mb-4">
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏠</div>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👑</div>
           <h2 style={{ 
             color: '#2c3e50', 
             fontWeight: '700', 
             marginBottom: '0.5rem',
             fontSize: '1.75rem'
           }}>
-            Εγγραφή Χρήστη
+            Δημιουργία Admin
           </h2>
-          <p style={{ color: '#6c757d', margin: '0' }}>Δημιουργήστε τον λογαριασμό σας</p>
+          <p style={{ color: '#6c757d', margin: '0' }}>Δημιουργήστε τον πρώτο διαχειριστή</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -116,9 +111,9 @@ function Register() {
                 backgroundColor: '#f9fafb'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
+                e.target.style.borderColor = '#f093fb';
                 e.target.style.backgroundColor = 'white';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(240, 147, 251, 0.1)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e5e7eb';
@@ -148,7 +143,7 @@ function Register() {
               value={formData.email}
               onChange={handleChange}
               required
-              placeholder="example@email.com"
+              placeholder="admin@example.com"
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
@@ -160,9 +155,9 @@ function Register() {
                 backgroundColor: '#f9fafb'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
+                e.target.style.borderColor = '#f093fb';
                 e.target.style.backgroundColor = 'white';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(240, 147, 251, 0.1)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e5e7eb';
@@ -208,9 +203,9 @@ function Register() {
                 letterSpacing: '0.1em'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
+                e.target.style.borderColor = '#f093fb';
                 e.target.style.backgroundColor = 'white';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(240, 147, 251, 0.1)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e5e7eb';
@@ -256,9 +251,9 @@ function Register() {
                 letterSpacing: '0.1em'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
+                e.target.style.borderColor = '#f093fb';
                 e.target.style.backgroundColor = 'white';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(240, 147, 251, 0.1)';
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e5e7eb';
@@ -274,7 +269,7 @@ function Register() {
             style={{
               width: '100%',
               padding: '0.875rem 1rem',
-              background: loading ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: loading ? '#9ca3af' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -283,19 +278,19 @@ function Register() {
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease',
               transform: loading ? 'none' : 'translateY(0)',
-              boxShadow: loading ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.4)',
+              boxShadow: loading ? 'none' : '0 4px 12px rgba(240, 147, 251, 0.4)',
               marginTop: '0.5rem'
             }}
             onMouseEnter={(e) => {
               if (!loading) {
                 e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.5)';
+                e.target.style.boxShadow = '0 6px 16px rgba(240, 147, 251, 0.5)';
               }
             }}
             onMouseLeave={(e) => {
               if (!loading) {
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                e.target.style.boxShadow = '0 4px 12px rgba(240, 147, 251, 0.4)';
               }
             }}
           >
@@ -309,30 +304,17 @@ function Register() {
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }}></span>
-                Εγγραφή...
+                Δημιουργία...
               </span>
             ) : (
-              '✨ Εγγραφή'
+              '👑 Δημιουργία Admin'
             )}
           </button>
         </form>
 
         <div className="text-center" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e7eb' }}>
           <p style={{ color: '#6b7280', margin: '0', fontSize: '0.875rem' }}>
-            Έχετε ήδη λογαριασμό;{' '}
-            <Link 
-              to="/login" 
-              style={{ 
-                color: '#667eea', 
-                textDecoration: 'none', 
-                fontWeight: '600',
-                transition: 'color 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#5a67d8'}
-              onMouseLeave={(e) => e.target.style.color = '#667eea'}
-            >
-              Σύνδεση εδώ
-            </Link>
+            <strong>Σημείωση:</strong> Αυτό λειτουργεί μόνο αν δεν υπάρχει ήδη admin χρήστης.
           </p>
         </div>
       </div>
@@ -340,4 +322,4 @@ function Register() {
   );
 }
 
-export default Register;
+export default CreateAdmin;

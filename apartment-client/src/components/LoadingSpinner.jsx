@@ -58,3 +58,5 @@ export function SkeletonCard() {
     </div>
   );
 }
+
+export default LoadingSpinner;

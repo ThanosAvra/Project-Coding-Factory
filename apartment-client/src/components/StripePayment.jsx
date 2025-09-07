@@ -9,8 +9,8 @@ import {
 import { LoadingSpinner } from './LoadingSpinner';
 import { toast } from './Toast';
 
-// Initialize Stripe (use test publishable key)
-const stripePromise = loadStripe('pk_test_51234567890abcdef'); // Replace with your test key
+// Initialize Stripe with publishable key from environment variables
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -60,15 +60,36 @@ function CheckoutForm({ amount, onSuccess, onError }) {
       return;
     }
 
-    // Simulate payment intent confirmation (in real app, this would be done on backend)
     try {
-      // Simulate successful payment
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      onSuccess({
+      // Call your backend to create a payment intent
+      const response = await axios.post('/api/payments/create-payment-intent', {
         paymentMethodId: paymentMethod.id,
-        status: 'succeeded'
+        amount: amount * 100, // Convert to cents
+        currency: 'eur',
+        metadata: {
+          apartmentId: bookingInfo.apartmentId,
+          startDate: bookingInfo.startDate,
+          endDate: bookingInfo.endDate,
+          totalPrice: amount
+        }
       });
+      
+      // Confirm the payment on the client
+      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+        response.data.clientSecret
+      );
+      
+      if (confirmError) {
+        throw confirmError;
+      }
+      
+      if (paymentIntent.status === 'succeeded') {
+        onSuccess({
+          paymentMethodId: paymentMethod.id,
+          paymentIntentId: paymentIntent.id,
+          status: 'succeeded'
+        });
+      }
     } catch (err) {
       onError('Payment failed. Please try again.');
     } finally {
@@ -77,7 +98,7 @@ function CheckoutForm({ amount, onSuccess, onError }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <div>
       <div style={{ 
         padding: '1rem',
         border: '1px solid var(--border-color)',
@@ -89,7 +110,8 @@ function CheckoutForm({ amount, onSuccess, onError }) {
       </div>
       
       <button
-        type="submit"
+        type="button"
+        onClick={handleSubmit}
         disabled={!stripe || processing}
         className="btn btn-success"
         style={{ 
@@ -126,7 +148,7 @@ function CheckoutForm({ amount, onSuccess, onError }) {
         Declined: 4000 0000 0000 0002<br/>
         Use any future date and any 3-digit CVC
       </div>
-    </form>
+    </div>
   );
 }
 

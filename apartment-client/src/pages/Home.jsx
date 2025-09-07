@@ -3,34 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { LoadingSpinner, SkeletonCard } from '../components/LoadingSpinner';
 import { toast } from '../components/Toast';
+import { useUser } from '../context/UserContext';
 
 export default function Home() {
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user } = useUser();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Get user from localStorage on component mount
-    const loadUser = () => {
-      try {
-        const userData = localStorage.getItem('user');
-        console.log('Loaded user data from localStorage:', userData);
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          console.log('Parsed user data:', parsedUser);
-          setCurrentUser(parsedUser);
-        } else {
-          console.log('No user data found in localStorage');
-        }
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-        console.error('Error parsing user data:', e);
-        localStorage.removeItem('user');
-      }
-    }
-  }, []);
 
   useEffect(() => {
     axios.get('/apartments')
@@ -46,8 +26,7 @@ export default function Home() {
   }, []);
 
   const handleBooking = (apartmentId) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!user) {
       toast.warning('Παρακαλώ συνδεθείτε πρώτα');
       navigate('/login');
       return;
@@ -56,27 +35,27 @@ export default function Home() {
   };
 
   const isOwner = (apartment) => {
-    if (!currentUser) {
+    if (!user) {
       console.log('No current user');
       return false;
     }
     
-    const userId = currentUser.id || currentUser._id;
+    const userId = user.id || user._id;
     const ownerId = apartment.owner?._id || apartment.owner;
     
     console.log('Checking ownership:', {
       userId,
       ownerId,
       apartmentId: apartment._id,
-      currentUser
+      user
     });
     
     return ownerId === userId;
   };
 
   const isAdmin = () => {
-    const isAdmin = currentUser?.role === 'ADMIN';
-    console.log('Is admin:', isAdmin, 'User role:', currentUser?.role);
+    const isAdmin = user?.role === 'ADMIN';
+    console.log('Is admin:', isAdmin, 'User role:', user?.role);
     return isAdmin;
   };
 
@@ -88,7 +67,6 @@ export default function Home() {
     try {
       setDeletingId(apartmentId);
       const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
       
       console.log('=== Delete Debug ===');
       console.log('Apartment ID:', apartmentId);
@@ -145,17 +123,102 @@ export default function Home() {
 
   return (
     <div>
+      {/* Hero Section with Background */}
+      <div style={{
+        backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        color: 'white',
+        marginBottom: '3rem',
+        borderRadius: '0 0 2rem 2rem',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          maxWidth: '800px',
+          padding: '2rem',
+          zIndex: 2
+        }}>
+          <h1 style={{ 
+            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+            fontWeight: '700',
+            marginBottom: '1.5rem',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+            background: 'linear-gradient(135deg, #fff, #f0f8ff)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            🏠 Βρείτε το Ιδανικό Διαμέρισμα
+          </h1>
+          <p style={{ 
+            fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)', 
+            marginBottom: '2rem',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
+            lineHeight: '1.6'
+          }}>
+            Ανακαλύψτε τα καλύτερα διαμερίσματα για τη διαμονή σας.<br/>
+            Άνεση, στυλ και αξεπέραστες τιμές σας περιμένουν!
+          </p>
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'center',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              padding: '1rem 1.5rem',
+              borderRadius: '1rem',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
+            }}>
+              <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>✨</span>
+              Πολυτελή Διαμερίσματα
+            </div>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              padding: '1rem 1.5rem',
+              borderRadius: '1rem',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
+            }}>
+              <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>🌟</span>
+              Άμεση Κράτηση
+            </div>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              padding: '1rem 1.5rem',
+              borderRadius: '1rem',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
+            }}>
+              <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>💎</span>
+              Καλύτερες Τιμές
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="text-center mb-5">
-        <h1 style={{ 
+        <h2 style={{ 
           background: 'var(--primary-gradient)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
+          backgroundClip: 'text',
+          fontSize: '2.5rem',
+          marginBottom: '1rem'
         }}>
           Διαθέσιμα Διαμερίσματα
-        </h1>
+        </h2>
         <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
-          Ανακαλύψτε τα καλύτερα διαμερίσματα για τη διαμονή σας
+          Επιλέξτε από τη συλλογή μας τα πιο εντυπωσιακά διαμερίσματα
         </p>
       </div>
 

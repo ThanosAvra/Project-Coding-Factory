@@ -5,7 +5,13 @@ const apartmentSchema = new mongoose.Schema({
   title: { type: String, required: true },
   location: { type: String, required: true },
   pricePerNight: { type: Number, required: true },
-  description: { type: String }
+  description: { type: String },
+  images: [{ type: String }], // Array of image URLs/paths
+  beds: { type: Number, default: 1 },
+  bathrooms: { type: Number, default: 1 },
+  maxGuests: { type: Number, default: 2 },
+  amenities: [{ type: String }],
+  available: { type: Boolean, default: true }
 }, { timestamps: true });
 
 // Avoid re-compilation error

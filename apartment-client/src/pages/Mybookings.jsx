@@ -4,6 +4,7 @@ import axios from '../api/axios';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { toast } from '../components/Toast';
 import { format, isAfter, isBefore } from 'date-fns';
+import { useUser } from '../context/UserContext';
 
 // Set the default locale for date-fns
 import styled from 'styled-components';
@@ -63,6 +64,8 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
+  const [error, setError] = useState('');
+  const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -76,20 +79,38 @@ export default function MyBookings() {
   }, [location.state]);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    const fetchBookings = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const res = await axios.get('/bookings/my');
+        // Sort bookings by date (newest first) and status
+        const sortedBookings = res.data.sort((a, b) => {
+          // First sort by status (using STATUS_ORDER)
+          const statusOrderA = STATUS_ORDER.indexOf(a.status || 'PENDING');
+          const statusOrderB = STATUS_ORDER.indexOf(b.status || 'PENDING');
+          
+          if (statusOrderA !== statusOrderB) {
+            return statusOrderA - statusOrderB;
+          }
+          
+          // Then sort by start date (newest first)
+          return new Date(b.startDate) - new Date(a.startDate);
+        });
+        
+        setBookings(sortedBookings);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+        setError('Σφάλμα φόρτωσης κρατήσεων');
+        toast.error('Δεν ήταν δυνατή η φόρτωση των κρατήσεων');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchBookings = async () => {
-    try {
-      const res = await axios.get('/bookings/my');
-      setBookings(res.data);
-    } catch (err) {
-      console.error('Error fetching bookings:', err);
-      toast.error('Σφάλμα κατά τη φόρτωση των κρατήσεων');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchBookings();
+  }, [user]);
 
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm('Είστε σίγουροι ότι θέλετε να ακυρώσετε αυτή την κράτηση;')) {
@@ -97,19 +118,88 @@ export default function MyBookings() {
     }
 
     setCancellingId(bookingId);
-
+    
     try {
-      await axios.delete(`/bookings/${bookingId}`);
-      // Refresh bookings list
-      fetchBookings();
+      await axios.patch(`/bookings/${bookingId}`, { status: 'CANCELLED' });
+      
+      // Update local state
+      setBookings(prev => 
+        prev.map(booking => 
+          booking._id === bookingId 
+            ? { ...booking, status: 'CANCELLED' } 
+            : booking
+        )
+      );
+      
       toast.success('Η κράτηση ακυρώθηκε επιτυχώς');
-    } catch (err) {
-      console.error('Error canceling booking:', err);
-      toast.error(err.response?.data?.error || 'Σφάλμα κατά την ακύρωση');
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      const errorMessage = error.response?.data?.message || 'Σφάλμα κατά την ακύρωση';
+      toast.error(errorMessage);
     } finally {
       setCancellingId(null);
     }
   };
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      PENDING: { text: 'Εκκρεμεί', class: 'status-pending' },
+      CONFIRMED: { text: 'Επιβεβαιωμένη', class: 'status-confirmed' },
+      CANCELLED: { text: 'Ακυρωμένη', class: 'status-cancelled' }
+    };
+    
+    const statusInfo = statusMap[status] || { text: status, class: 'status-unknown' };
+    return <span className={`status-badge ${statusInfo.class}`}>{statusInfo.text}</span>;
+  };
+
+  if (!user) {
+    return (
+      <div className="auth-required">
+        <h2>Απαιτείται σύνδεση</h2>
+        <p>Παρακαλώ συνδεθείτε για να δείτε τις κρατήσεις σας.</p>
+        <button 
+          onClick={() => navigate('/login', { state: { from: '/my-bookings' } })}
+          className="btn btn-primary"
+        >
+          Σύνδεση
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <LoadingSpinner />
+        <p className="mt-3">Φόρτωση κρατήσεων...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
+  if (bookings.length === 0) {
+    return (
+      <div className="text-center py-5">
+        <div className="card">
+          <div className="card-body py-5">
+            <h2>Δεν βρέθηκαν κρατήσεις</h2>
+            <p className="text-muted mt-3">
+              Δεν έχετε κάνει ακόμα κρατήσεις. Ξεκινήστε τώρα!
+            </p>
+            <button 
+              className="btn btn-primary mt-3"
+              onClick={() => navigate('/')}
+            >
+              🔍 Βρείτε Διαμέρισμα
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderBookingCard = (booking) => {
     const status = booking.status || 'PENDING';
@@ -129,31 +219,73 @@ export default function MyBookings() {
           <div className="d-flex justify-content-between align-items-start">
             <div className="flex-grow-1">
               <div className="d-flex justify-content-between align-items-start">
-                <h5 className="card-title mb-1">
-                  {booking.apartment?.title || 'Δεν βρέθηκε διαμέρισμα'}
-                </h5>
-                <div className="d-flex flex-column gap-2">
+                <div className="flex-grow-1">
+                  <h5 className="card-title mb-1">
+                    {booking.apartment?.title || 'Δεν βρέθηκε διαμέρισμα'}
+                  </h5>
+                </div>
+                <div className="d-flex align-items-center gap-4 ms-5">
                   {(status === 'PENDING' || status === 'CONFIRMED') && isUpcoming && (
                     <button
                       onClick={() => handleCancelBooking(booking._id)}
-                      className="btn btn-outline-danger btn-sm"
+                      className="btn btn-outline-danger"
+                      style={{
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: '500',
+                        fontSize: '0.9rem',
+                        transition: 'all 0.2s ease',
+                        border: '1.5px solid #dc3545'
+                      }}
                       disabled={cancellingId === booking._id}
+                      onMouseOver={(e) => {
+                        if (!cancellingId) {
+                          e.target.style.transform = 'translateY(-1px)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(220, 53, 69, 0.3)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     >
                       {cancellingId === booking._id ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-1" />
+                          <span className="spinner-border spinner-border-sm me-2" />
                           Ακύρωση...
                         </>
                       ) : (
-                        'Ακύρωση Κράτησης'
+                        <>
+                          <span className="me-2">✕</span>
+                          Ακύρωση
+                        </>
                       )}
                     </button>
                   )}
                   <button 
                     onClick={() => navigate(`/apartments/${booking.apartment?._id}`)}
-                    className="btn btn-outline-primary btn-sm"
+                    className="btn btn-primary"
+                    style={{
+                      background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 20px',
+                      fontWeight: '500',
+                      fontSize: '0.9rem',
+                      boxShadow: '0 2px 8px rgba(0, 123, 255, 0.2)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(0, 123, 255, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(0, 123, 255, 0.2)';
+                    }}
                   >
-                    👁️ Προβολή
+                    <span className="me-2">👁️</span>
+                    Προβολή
                   </button>
                 </div>
               </div>
@@ -233,15 +365,6 @@ export default function MyBookings() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <LoadingSpinner />
-        <p className="mt-3">Φόρτωση κρατήσεων...</p>
-      </div>
-    );
-  }
-
   // Group bookings by status
   const groupedBookings = bookings.reduce((acc, booking) => {
     const status = booking.status || 'PENDING';
@@ -257,27 +380,6 @@ export default function MyBookings() {
     group.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   });
 
-  if (bookings.length === 0) {
-    return (
-      <div className="text-center py-5">
-        <div className="card">
-          <div className="card-body py-5">
-            <h2>Δεν βρέθηκαν κρατήσεις</h2>
-            <p className="text-muted mt-3">
-              Δεν έχετε κάνει ακόμα κρατήσεις. Ξεκινήστε τώρα!
-            </p>
-            <button 
-              className="btn btn-primary mt-3"
-              onClick={() => navigate('/')}
-            >
-              🔍 Βρείτε Διαμέρισμα
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -285,10 +387,32 @@ export default function MyBookings() {
           <span className="gradient-text">Οι Κρατήσεις μου</span>
         </h1>
         <button 
-          className="btn btn-primary"
+          className="btn btn-success"
           onClick={() => navigate('/')}
+          style={{
+            background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '12px 24px',
+            fontWeight: '600',
+            fontSize: '1rem',
+            boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)',
+            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = 'translateY(-3px)';
+            e.target.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+          }}
         >
-          🔍 Νέα Κράτηση
+          <span>🔍</span>
+          Νέα Κράτηση
         </button>
       </div>
 

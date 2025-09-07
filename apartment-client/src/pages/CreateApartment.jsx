@@ -1,27 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { toast } from '../components/Toast';
+import { useUser } from '../context/UserContext';
+import ProtectedRoute from '../components/ProtectedRoute';
 
-export default function CreateApartment() {
+function CreateApartment() {
   const [formData, setFormData] = useState({
     title: '',
     location: '',
     pricePerNight: '',
     description: ''
   });
+  
   const [loading, setLoading] = useState(false);
+  const { user } = useUser();
   const navigate = useNavigate();
 
-  // Check if user is authenticated
+  // Redirect non-admin users
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.warning('Πρέπει να συνδεθείτε για να δημιουργήσετε διαμέρισμα');
-      navigate('/login');
+    if (user && user.role !== 'admin') {
+      navigate('/unauthorized');
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,6 +34,11 @@ export default function CreateApartment() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!user || user.role !== 'admin') {
+      toast.error('Δεν έχετε δικαιώματα πρόσβασης');
+      return;
+    }
     
     if (!formData.title || !formData.location || !formData.pricePerNight) {
       toast.warning('Παρακαλώ συμπληρώστε όλα τα υποχρεωτικά πεδία');
@@ -198,3 +204,5 @@ export default function CreateApartment() {
     </div>
   );
 }
+
+export default CreateApartment;

@@ -1,73 +1,92 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { toast } from '../components/Toast';
+import { useUser } from '../context/UserContext';
+import LoadingSpinner from '../components/LoadingSpinner';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-export default function Booking() {
+function Booking() {
   const { id } = useParams();
-  const [apartment, setApartment] = useState(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { user } = useUser();
+  
+  const [apartment, setApartment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // Fetch apartment details
-    axios.get(`/apartments/${id}`)
-      .then(res => {
-        setApartment(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
+    const fetchApartment = async () => {
+      try {
+        const response = await axios.get(`/apartments/${id}`);
+        setApartment(response.data);
+        setError(null);
+      } catch (err) {
         console.error('Error fetching apartment:', err);
-        toast.error('Σφάλμα κατά τη φόρτωση του διαμερίσματος');
+        setError('Δεν ήταν δυνατή η φόρτωση του διαμερίσματος');
+        toast.error('Σφάλμα φόρτωσης διαμερίσματος');
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchApartment();
   }, [id]);
 
   useEffect(() => {
     if (startDate && endDate && apartment) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-      if (days > 0) {
-        setTotalPrice(days * apartment.pricePerNight);
-      }
+      const diffTime = Math.abs(endDate - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setTotalPrice(diffDays * apartment.pricePerNight);
+    } else {
+      setTotalPrice(0);
     }
   }, [startDate, endDate, apartment]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!user) {
+      toast.warning('Παρακαλώ συνδεθείτε πρώτα');
+      navigate('/login', { state: { from: `/booking/${id}` } });
+      return;
+    }
+
     if (!startDate || !endDate) {
-      toast.warning('Παρακαλώ επιλέξτε ημερομηνίες');
+      toast.warning('Παρακαλώ επιλέξτε ημερομηνίες κράτησης');
       return;
     }
 
-    if (new Date(startDate) >= new Date(endDate)) {
-      toast.error('Η ημερομηνία αναχώρησης πρέπει να είναι μετά την άφιξη');
-      return;
-    }
+    setSubmitting(true);
 
-    // Navigate to payment page with booking info
-    const bookingInfo = {
-      apartmentId: id,
-      apartmentTitle: apartment.title,
-      apartmentLocation: apartment.location,
-      startDate,
-      endDate,
-      totalPrice
-    };
-
-    // Persist booking details in case of page refresh or direct access to /payment
     try {
-      sessionStorage.setItem('bookingInfo', JSON.stringify(bookingInfo));
-    } catch (_) {}
+      const bookingData = {
+        apartmentId: id,
+        apartmentTitle: apartment.title,
+        apartmentLocation: apartment.location,
+        startDate,
+        endDate,
+        totalPrice
+      };
 
-    navigate('/payment', { state: { bookingInfo } });
+      // Persist booking details in case of page refresh or direct access to /payment
+      try {
+        sessionStorage.setItem('bookingInfo', JSON.stringify(bookingData));
+      } catch (_) {}
+
+      navigate('/payment', { state: { bookingInfo: bookingData } });
+    } catch (error) {
+      console.error('Booking error:', error);
+      const errorMessage = error.response?.data?.message || 'Σφάλμα κατά την κράτηση';
+      toast.error(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -81,7 +100,7 @@ export default function Booking() {
     );
   }
 
-  if (!apartment) {
+  if (error) {
     return (
       <div className="text-center" style={{ padding: '3rem' }}>
         <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>❌</div>
@@ -97,8 +116,6 @@ export default function Booking() {
       </div>
     );
   }
-
-  const days = startDate && endDate ? Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -161,31 +178,35 @@ export default function Booking() {
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">📅 Ημερομηνία Έναρξης:</label>
-                <input
-                  type="date"
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={new Date()}
+                  placeholderText="Επιλέξτε ημερομηνία άφιξης"
                   className="form-input"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
                   required
-                  disabled={submitting}
                 />
               </div>
 
               <div className="form-group">
                 <label className="form-label">📅 Ημερομηνία Λήξης:</label>
-                <input
-                  type="date"
+                <DatePicker
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate || new Date()}
+                  placeholderText="Επιλέξτε ημερομηνία αναχώρησης"
                   className="form-input"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || new Date().toISOString().split('T')[0]}
                   required
-                  disabled={submitting}
                 />
               </div>
 
-              {days > 0 && (
+              {totalPrice > 0 && (
                 <div style={{ 
                   background: 'var(--warning-gradient)',
                   color: 'white',
@@ -198,7 +219,7 @@ export default function Booking() {
                     📊 Σύνοψη Κράτησης
                   </div>
                   <div style={{ margin: '0.5rem 0' }}>
-                    <strong>{days} βραδιές</strong> × <strong>{apartment.pricePerNight}€</strong>
+                    <strong>{Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))} βραδιές</strong> × <strong>{apartment.pricePerNight}€</strong>
                   </div>
                   <div style={{ fontSize: '1.3rem', fontWeight: '700' }}>
                     Συνολικό Κόστος: {totalPrice}€
@@ -209,7 +230,7 @@ export default function Booking() {
               <button 
                 type="submit"
                 className="btn btn-success w-full"
-                disabled={submitting || !totalPrice}
+                disabled={!startDate || !endDate || submitting}
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -236,3 +257,5 @@ export default function Booking() {
     </div>
   );
 }
+
+export default Booking;

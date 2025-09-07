@@ -14,6 +14,7 @@ export default function Payment() {
     paymentMethod: 'stripe'
   });
   const [processing, setProcessing] = useState(false);
+  const [mockPayment, setMockPayment] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -87,27 +88,47 @@ export default function Payment() {
     setProcessing(true);
     
     try {
-      // Create booking with Stripe payment info
+      // Set check-in time to 15:00 and check-out time to 11:00
+      const startDate = new Date(bookingInfo.startDate);
+      startDate.setHours(15, 0, 0, 0); // 15:00 check-in
+      
+      const endDate = new Date(bookingInfo.endDate);
+      endDate.setHours(11, 0, 0, 0); // 11:00 check-out
+
+      // Create the booking with COMPLETED payment status since payment succeeded
       const bookingData = {
         apartmentId: bookingInfo.apartmentId,
-        startDate: bookingInfo.startDate,
-        endDate: bookingInfo.endDate,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         totalPrice: bookingInfo.totalPrice,
         paymentMethod: 'stripe',
         paymentMethodId: paymentResult.paymentMethodId,
-        paymentStatus: 'COMPLETED'
+        paymentIntentId: paymentResult.paymentIntentId,
+        paymentStatus: 'COMPLETED', // Payment is already completed
+        status: 'CONFIRMED', // Booking is confirmed after successful payment
+        guestName: bookingInfo.guestName || '',
+        guestEmail: bookingInfo.guestEmail || '',
+        guestPhone: bookingInfo.guestPhone || ''
       };
 
-      const response = await axios.post('/bookings', bookingData);
+      // Create the booking - it will be automatically confirmed due to COMPLETED payment
+      const bookingResponse = await axios.post('/bookings', bookingData);
       
+      // Show success message
       toast.success('🎉 Πληρωμή επιτυχής! Η κράτησή σας επιβεβαιώθηκε!');
       
       // Clear stored booking info on success
-      try { sessionStorage.removeItem('bookingInfo'); } catch (_) {}
+      try { 
+        sessionStorage.removeItem('bookingInfo'); 
+      } catch (_) {}
 
+      // Redirect to bookings page after a short delay
       setTimeout(() => {
-        navigate('/my-bookings');
-      }, 2000);
+        navigate('/my-bookings', { 
+          state: { bookingConfirmed: true },
+          replace: true // Replace current entry in history
+        });
+      }, 1500);
       
     } catch (err) {
       console.error('Booking creation error:', err);
@@ -132,11 +153,18 @@ export default function Payment() {
     setProcessing(true);
 
     try {
+      // Set check-in time to 15:00 and check-out time to 11:00
+      const startDate = new Date(bookingInfo.startDate);
+      startDate.setHours(15, 0, 0, 0); // 15:00 check-in
+      
+      const endDate = new Date(bookingInfo.endDate);
+      endDate.setHours(11, 0, 0, 0); // 11:00 check-out
+
       // Create booking with payment info
       const bookingData = {
         apartmentId: bookingInfo.apartmentId,
-        startDate: bookingInfo.startDate,
-        endDate: bookingInfo.endDate,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         totalPrice: bookingInfo.totalPrice,
         paymentMethod: paymentData.paymentMethod,
         paymentStatus: 'COMPLETED',
@@ -174,6 +202,81 @@ export default function Payment() {
       if (err.response?.data?.bookingId) {
         toast.warning('Η πληρωμή ολοκληρώθηκε αλλά υπήρξε πρόβλημα με την επιβεβαίωση. Παρακαλώ ελέγξτε τις κρατήσεις σας.');
         navigate('/my-bookings');
+      }
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleMockPayment = async () => {
+    try {
+      setProcessing(true);
+      
+      const token = localStorage.getItem('token');
+      console.log('Auth Token:', token ? 'Token exists' : 'No token found');
+      
+      // Set check-in time to 15:00 and check-out time to 11:00
+      const startDate = new Date(bookingInfo.startDate);
+      startDate.setHours(15, 0, 0, 0); // 15:00 check-in
+      
+      const endDate = new Date(bookingInfo.endDate);
+      endDate.setHours(11, 0, 0, 0); // 11:00 check-out
+      
+      const bookingData = {
+        apartment: bookingInfo.apartmentId, // Changed from apartmentId to apartment to match backend
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        totalPrice: bookingInfo.totalPrice,
+        paymentStatus: 'COMPLETED',
+        status: 'CONFIRMED',
+        paymentMethod: 'mock',
+        paymentDate: new Date().toISOString()
+      };
+
+      console.log('Sending booking data:', JSON.stringify(bookingData, null, 2));
+      
+      // Use the full URL for the request
+      const response = await axios.post(
+        'http://localhost:8080/api/bookings',
+        bookingData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      console.log('Booking response:', response.data);
+      toast.success('Η κράτηση ολοκληρώθηκε επιτυχώς!');
+      
+      // Clear any stored booking info
+      sessionStorage.removeItem('bookingInfo');
+      
+      // Redirect to bookings page
+      navigate('/my-bookings');
+    } catch (error) {
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      
+      // Log the specific error message from backend
+      if (error.response?.data) {
+        console.error('Backend error response:', JSON.stringify(error.response.data, null, 2));
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                         error.message || 
+                         'Σφάλμα κατά την ολοκλήρωση της κράτησης';
+      
+      toast.error(`Σφάλμα: ${errorMessage}`);
+      
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        navigate('/login', { state: { from: location.pathname } });
       }
     } finally {
       setProcessing(false);
@@ -284,6 +387,16 @@ export default function Payment() {
                     />
                     🅿️ PayPal
                   </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="mock"
+                      checked={paymentData.paymentMethod === 'mock'}
+                      onChange={handleInputChange}
+                    />
+                    🤖 Mock Payment
+                  </label>
                 </div>
               </div>
 
@@ -370,7 +483,21 @@ export default function Payment() {
                 </div>
               )}
 
-              {paymentData.paymentMethod !== 'stripe' && (
+              {paymentData.paymentMethod === 'mock' && (
+                <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                  <h3 className="font-bold mb-2">Λειτουργία Δοκιμής (Χωρίς Stripe)</h3>
+                  <p className="mb-3 text-sm">Για δοκιμαστικούς σκοπούς, μπορείτε να χρησιμοποιήσετε την παρακάτω λειτουργία χωρίς πραγματική χρέωση.</p>
+                  <button
+                    onClick={handleMockPayment}
+                    disabled={processing}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
+                  >
+                    {processing ? 'Επεξεργασία...' : 'Ολοκλήρωση Κράτησης (Δοκιμαστική Λειτουργία)'}
+                  </button>
+                </div>
+              )}
+
+              {paymentData.paymentMethod !== 'stripe' && paymentData.paymentMethod !== 'mock' && (
                 <div style={{ 
                   display: 'flex', 
                   gap: '1rem', 
