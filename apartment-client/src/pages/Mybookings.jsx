@@ -224,7 +224,7 @@ export default function MyBookings() {
                     {booking.apartment?.title || 'Δεν βρέθηκε διαμέρισμα'}
                   </h5>
                 </div>
-                <div className="d-flex align-items-center gap-4 ms-5">
+                <div className="d-flex align-items-center gap-5 ms-auto">
                   {(status === 'PENDING' || status === 'CONFIRMED') && isUpcoming && (
                     <button
                       onClick={() => handleCancelBooking(booking._id)}

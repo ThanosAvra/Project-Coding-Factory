@@ -71,6 +71,51 @@ function AdminDashboard() {
       <div className="admin-dashboard">
         <h1>Πίνακας Διαχείρισης</h1>
         
+        <div className="row mb-4">
+          <div className="col-md-4">
+            <div className="card text-center" style={{ 
+              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+            onClick={() => navigate('/admin/users')}
+            >
+              <div className="card-body">
+                <h3 className="mb-0">👑</h3>
+                <p className="mb-0">Διαχείριση Χρηστών</p>
+                <small>Δείτε όλους τους χρήστες και admins</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card text-center" style={{ 
+              background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+              color: 'white',
+              border: 'none'
+            }}>
+              <div className="card-body">
+                <h3 className="mb-0">📊</h3>
+                <p className="mb-0">Στατιστικά</p>
+                <small>Χρήστες: {users.length} | Κρατήσεις: {bookings.length}</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card text-center" style={{ 
+              background: 'linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)',
+              color: 'white',
+              border: 'none'
+            }}>
+              <div className="card-body">
+                <h3 className="mb-0">🏠</h3>
+                <p className="mb-0">Διαμερίσματα</p>
+                <small>Διαχείριση καταχωρήσεων</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="tabs">
           <button 
             className={`tab ${activeTab === 'users' ? 'active' : ''}`}

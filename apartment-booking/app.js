@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const apartmentRoutes = require('./routes/apartments');
 const bookingRoutes = require('./routes/bookings');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -50,6 +51,7 @@ async function start() {
     app.use('/api/users', userRoutes);
     app.use('/api/apartments', apartmentRoutes);
     app.use('/api/bookings', bookingRoutes);
+    app.use('/api/admin', adminRoutes);
 
     app.get('/health', (req, res) => {
       const state = ['disconnected','connected','connecting','disconnecting'][mongoose.connection.readyState] || 'unknown';

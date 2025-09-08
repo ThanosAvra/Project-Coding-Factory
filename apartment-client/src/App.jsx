@@ -17,6 +17,7 @@ import { UserProvider, useUser } from './context/UserContext';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
 import NotFound from './pages/NotFound';
 
 function Navigation() {
@@ -59,7 +60,7 @@ function Navigation() {
             {user ? (
               <>
                 <span className="nav-text">
-                  Καλωσήρθατε, {user.username}
+                  Καλώς ήρθατε, {user.username}
                   {user.role === 'ADMIN' && ' (Διαχειριστής)'}
                 </span>
                 <button onClick={handleLogout} className="btn btn-outline">
@@ -164,6 +165,15 @@ function AppContent() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminUsers />
                   </ProtectedRoute>
                 }
               />
