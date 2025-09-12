@@ -213,7 +213,6 @@ export default function Payment() {
       setProcessing(true);
       
       const token = localStorage.getItem('token');
-      console.log('Auth Token:', token ? 'Token exists' : 'No token found');
       
       // Set check-in time to 15:00 and check-out time to 11:00
       const startDate = new Date(bookingInfo.startDate);
@@ -233,7 +232,6 @@ export default function Payment() {
         paymentDate: new Date().toISOString()
       };
 
-      console.log('Sending booking data:', JSON.stringify(bookingData, null, 2));
       
       // Use the full URL for the request
       const response = await axios.post(
@@ -247,7 +245,6 @@ export default function Payment() {
         }
       );
 
-      console.log('Booking response:', response.data);
       toast.success('Η κράτηση ολοκληρώθηκε επιτυχώς!');
       
       // Clear any stored booking info

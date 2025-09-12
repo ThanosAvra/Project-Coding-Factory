@@ -9,11 +9,21 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Bookings endpoint is working', timestamp: new Date() });
 });
 
-// 📄 Λίστα όλων των κρατήσεων του τρέχοντος χρήστη
+// 📄 Λίστα κρατήσεων - Admin βλέπει όλες, χρήστες μόνο τις δικές τους
 router.get('/', auth(), async (req, res) => {
   try {
-    const bookings = await Booking.find({ user: req.user.id })
-      .populate('apartment', 'title location');
+    let query = {};
+    
+    // Αν δεν είναι admin, δείχνε μόνο τις δικές του κρατήσεις
+    if (req.user.role !== 'ADMIN') {
+      query.user = req.user.id;
+    }
+    
+    const bookings = await Booking.find(query)
+      .populate('apartment', 'title location')
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+      
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -90,16 +100,61 @@ router.post('/', auth(), async (req, res) => {
       return res.status(400).json({ error: 'End date must be after start date', start, end });
     }
 
-    // Check for overlapping bookings
+    // Check for blocked dates
+    const BlockedDate = require('../models/blockedDate');
+    const blockedDate = await BlockedDate.findOne({
+      $and: [
+        {
+          $or: [
+            { apartment: finalApartmentId },
+            { apartment: null } // Global blocks
+          ]
+        },
+        {
+          startDate: { $lt: end },
+          endDate: { $gt: start }
+        }
+      ]
+    });
+
+    if (blockedDate) {
+      return res.status(400).json({ 
+        error: 'Οι επιλεγμένες ημερομηνίες είναι αποκλεισμένες',
+        reason: blockedDate.reason || 'Συντήρηση',
+        blockedDateId: blockedDate._id
+      });
+    }
+
+    // Check for overlapping bookings (include PENDING bookings)
     const overlappingBooking = await Booking.findOne({
       apartment: finalApartmentId,
-      status: { $in: ['CONFIRMED', 'PAYMENT_COMPLETED'] },
+      status: { $in: ['PENDING', 'CONFIRMED', 'PAYMENT_COMPLETED'] },
       $or: [
         { startDate: { $lt: end }, endDate: { $gt: start } },
         { startDate: { $gte: start, $lt: end } },
         { endDate: { $gt: start, $lte: end } }
       ]
     });
+
+    // Check availability periods (blocked dates)
+    const Availability = require('../models/availability');
+    const isAvailable = await Availability.checkAvailability(finalApartmentId, start, end);
+    
+    if (!isAvailable) {
+      const blockingPeriod = await Availability.findOne({
+        apartment: finalApartmentId,
+        isAvailable: false,
+        $or: [
+          { startDate: { $lt: end }, endDate: { $gt: start } }
+        ]
+      });
+      
+      return res.status(400).json({ 
+        error: 'Selected dates are not available for booking',
+        reason: blockingPeriod?.reason || 'BLOCKED',
+        blockingPeriod: blockingPeriod?._id
+      });
+    }
 
     if (overlappingBooking) {
       return res.status(400).json({ 
@@ -186,6 +241,47 @@ router.delete('/:id', auth(), async (req, res) => {
 
     await booking.deleteOne();
     res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 📅 Get bookings for specific apartment
+router.get('/apartment/:apartmentId', async (req, res) => {
+  try {
+    const { apartmentId } = req.params;
+
+    const bookings = await Booking.find({ 
+      apartment: apartmentId,
+      status: { $in: ['PENDING', 'CONFIRMED'] }
+    }).sort({ checkInDate: 1 });
+
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🔄 Update booking status (Admin only)
+router.patch('/:id', auth(['ADMIN']), async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    if (!['PENDING', 'CONFIRMED', 'CANCELLED'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status, updatedAt: new Date() },
+      { new: true }
+    ).populate('apartment', 'title location').populate('user', 'name email');
+    
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    
+    res.json(booking);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -32,8 +32,8 @@ export default function AdminUsers() {
       setStats(adminResponse.data.data.stats);
       
       // Fetch all users
-      const allUsersResponse = await axios.get('/admin/all-users');
-      setAllUsers(allUsersResponse.data.data);
+      const allUsersResponse = await axios.get('/users');
+      setAllUsers(allUsersResponse.data);
       
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -51,6 +51,36 @@ export default function AdminUsers() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handlePromoteToAdmin = async (userId) => {
+    const confirmed = window.confirm('🔥 ΠΡΟΣΟΧΗ: Θα κάνετε αυτόν τον χρήστη ΔΙΑΧΕΙΡΙΣΤΉ!\n\nΘα έχει πλήρη πρόσβαση στο σύστημα.\n\nΠατήστε OK για συνέχεια ή Cancel για ακύρωση.');
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await axios.put(`/users/${userId}`, { role: 'ADMIN' });
+      toast.success('Ο χρήστης προήχθη σε διαχειριστή επιτυχώς!');
+      await fetchData(); // Refresh data
+    } catch (error) {
+      toast.error(`Σφάλμα: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const handleDemoteFromAdmin = async (userId) => {
+    if (!window.confirm('Είστε σίγουροι ότι θέλετε να αφαιρέσετε τα δικαιώματα διαχειριστή από αυτόν τον χρήστη;')) {
+      return;
+    }
+
+    try {
+      const response = await axios.put(`/users/${userId}`, { role: 'USER' });
+      toast.success('Τα δικαιώματα διαχειριστή αφαιρέθηκαν επιτυχώς!');
+      fetchData(); // Refresh data
+    } catch (error) {
+      toast.error(`Σφάλμα: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   if (!user || user.role !== 'ADMIN') {
@@ -188,35 +218,160 @@ export default function AdminUsers() {
 
       {activeTab === 'all' && (
         <div>
-          <h4 className="mb-3">👥 Όλοι οι Χρήστες</h4>
-          <div className="table-responsive">
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>Όνομα</th>
-                  <th>Email</th>
-                  <th>Ρόλος</th>
-                  <th>Ημερομηνία Εγγραφής</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allUsers.map((user) => (
-                  <tr key={user._id}>
-                    <td>
-                      {user.role === 'ADMIN' ? '👑 ' : '👤 '}
-                      {user.name}
-                    </td>
-                    <td>{user.email}</td>
-                    <td>
-                      <span className={`badge ${user.role === 'ADMIN' ? 'bg-success' : 'bg-primary'}`}>
-                        {user.role === 'ADMIN' ? 'Διαχειριστής' : 'Χρήστης'}
-                      </span>
-                    </td>
-                    <td>{formatDate(user.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h4 className="mb-4">👥 Όλοι οι Χρήστες ({allUsers.length})</h4>
+          
+          <div className="card shadow-sm border-0">
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover mb-0" style={{ fontSize: '0.95rem' }}>
+                  <thead style={{ 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white'
+                  }}>
+                    <tr>
+                      <th className="border-0 py-3 px-4" style={{ fontWeight: '600', letterSpacing: '0.5px' }}>
+                        👤 Χρήστης
+                      </th>
+                      <th className="border-0 py-3 px-4" style={{ fontWeight: '600', letterSpacing: '0.5px' }}>
+                        📧 Email
+                      </th>
+                      <th className="border-0 py-3 px-4 text-center" style={{ fontWeight: '600', letterSpacing: '0.5px' }}>
+                        🔐 Ρόλος
+                      </th>
+                      <th className="border-0 py-3 px-4 text-center" style={{ fontWeight: '600', letterSpacing: '0.5px' }}>
+                        📅 Εγγραφή
+                      </th>
+                      <th className="border-0 py-3 px-4 text-center" style={{ fontWeight: '600', letterSpacing: '0.5px', minWidth: '220px' }}>
+                        ⚡ Κατάσταση & Δικαιώματα
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allUsers.map((user, index) => (
+                      <tr key={user._id} style={{ 
+                        borderLeft: user.role === 'ADMIN' ? '4px solid #28a745' : '4px solid #007bff',
+                        backgroundColor: index % 2 === 0 ? '#f8f9fa' : 'white'
+                      }}>
+                        <td className="py-3 px-4 align-middle">
+                          <div className="d-flex align-items-center">
+                            <div className="me-3" style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '50%',
+                              background: user.role === 'ADMIN' 
+                                ? 'linear-gradient(135deg, #28a745, #20c997)' 
+                                : 'linear-gradient(135deg, #007bff, #0056b3)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '1.2rem',
+                              fontWeight: 'bold'
+                            }}>
+                              {user.role === 'ADMIN' ? '👑' : '👤'}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: '600', color: '#2c3e50', fontSize: '1rem' }}>
+                                {user.name}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                                ID: {user._id.slice(-8)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        
+                        <td className="py-3 px-4 align-middle">
+                          <div style={{ 
+                            fontFamily: 'monospace',
+                            fontSize: '0.9rem',
+                            color: '#495057',
+                            background: '#e9ecef',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            display: 'inline-block'
+                          }}>
+                            {user.email}
+                          </div>
+                        </td>
+                        
+                        <td className="py-3 px-4 align-middle text-center">
+                          <span className={`badge px-3 py-2 ${
+                            user.role === 'ADMIN' 
+                              ? 'bg-success' 
+                              : 'bg-primary'
+                          }`} style={{
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            letterSpacing: '0.5px'
+                          }}>
+                            {user.role === 'ADMIN' ? '👑 Διαχειριστής' : '👤 Χρήστης'}
+                          </span>
+                        </td>
+                        
+                        <td className="py-3 px-4 align-middle text-center">
+                          <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                            {formatDate(user.createdAt)}
+                          </div>
+                        </td>
+                        
+                        <td className="py-3 px-4 align-middle text-center">
+                          <div className="d-flex flex-column align-items-center gap-2">
+                            {user.role === 'ADMIN' ? (
+                              <>
+                                <span className="badge px-3 py-2" style={{
+                                  background: 'linear-gradient(135deg, #ffc107, #ff8c00)',
+                                  color: '#212529',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '600',
+                                  borderRadius: '20px',
+                                  boxShadow: '0 2px 4px rgba(255, 193, 7, 0.3)'
+                                }}>
+                                  ⚡ Ενεργός Διαχειριστής
+                                </span>
+                                <div style={{ 
+                                  fontSize: '0.75rem',
+                                  color: '#28a745',
+                                  fontWeight: '600',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}>
+                                  ✅ Πλήρη Δικαιώματα Συστήματος
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <span className="badge px-3 py-2" style={{
+                                  background: 'linear-gradient(135deg, #17a2b8, #138496)',
+                                  color: 'white',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '600',
+                                  borderRadius: '20px',
+                                  boxShadow: '0 2px 4px rgba(23, 162, 184, 0.3)'
+                                }}>
+                                  👤 Ενεργός Χρήστης
+                                </span>
+                                <div style={{ 
+                                  fontSize: '0.75rem',
+                                  color: '#007bff',
+                                  fontWeight: '600',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}>
+                                  🛡️ Βασικά Δικαιώματα Χρήστη
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       )}

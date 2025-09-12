@@ -32,6 +32,11 @@ export default function ApartmentDetails() {
   }, [id, navigate]);
 
   const handleBookNow = () => {
+    if (!user) {
+      toast.warning('Παρακαλώ συνδεθείτε πρώτα');
+      navigate('/login');
+      return;
+    }
     navigate(`/booking/${apartment._id}`);
   };
 
@@ -46,15 +51,6 @@ export default function ApartmentDetails() {
      apartment.owner._id.toString() === user._id.toString())
   );
 
-  // Debug logging
-  console.log('canEdit check:', {
-    user: user,
-    userRole: user?.role,
-    user_id: user?._id,
-    apartment: apartment,
-    ownerId: apartment?.owner?._id,
-    canEdit: canEdit
-  });
 
   if (loading) {
     return <LoadingSpinner />;

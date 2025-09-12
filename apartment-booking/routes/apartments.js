@@ -77,4 +77,58 @@ router.delete('/:id', auth(['ADMIN', 'USER']), async (req, res) => {
   }
 });
 
+// Λήψη μη διαθέσιμων ημερομηνιών για συγκεκριμένο διαμέρισμα
+router.get('/:id/unavailable-dates', async (req, res) => {
+  try {
+    const apartmentId = req.params.id;
+    const unavailableDates = [];
+
+    // Λήψη κρατήσεων που είναι ενεργές (PENDING, CONFIRMED, PAYMENT_COMPLETED)
+    const Booking = require('../models/booking');
+    const activeBookings = await Booking.find({
+      apartment: apartmentId,
+      status: { $in: ['PENDING', 'CONFIRMED', 'PAYMENT_COMPLETED'] }
+    });
+
+    // Προσθήκη ημερομηνιών από κρατήσεις
+    activeBookings.forEach(booking => {
+      const start = new Date(booking.startDate);
+      const end = new Date(booking.endDate);
+      
+      for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+        unavailableDates.push(new Date(d).toISOString().split('T')[0]);
+      }
+    });
+
+    // Λήψη αποκλεισμένων ημερομηνιών
+    const BlockedDate = require('../models/blockedDate');
+    const blockedDates = await BlockedDate.find({
+      $or: [
+        { apartment: apartmentId },
+        { apartment: null } // Global blocks
+      ]
+    });
+
+    // Προσθήκη αποκλεισμένων ημερομηνιών
+    blockedDates.forEach(block => {
+      const start = new Date(block.startDate);
+      const end = new Date(block.endDate);
+      
+      for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+        unavailableDates.push(new Date(d).toISOString().split('T')[0]);
+      }
+    });
+
+    // Αφαίρεση διπλότυπων και ταξινόμηση
+    const uniqueDates = [...new Set(unavailableDates)].sort();
+
+    res.json({
+      apartmentId,
+      unavailableDates: uniqueDates
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Αποτυχία λήψης μη διαθέσιμων ημερομηνιών' });
+  }
+});
+
 module.exports = router;

@@ -8,6 +8,8 @@ import Booking from './pages/Booking';
 import MyBookings from './pages/MyBookings';
 import CreateApartment from './pages/CreateApartment';
 import EditApartment from './pages/EditApartment';
+import ManageAvailability from './pages/ManageAvailability';
+import MyApartments from './pages/MyApartments';
 import Payment from './pages/Payment';
 import ApartmentDetails from './pages/ApartmentDetails';
 import CreateAdmin from './pages/CreateAdmin';
@@ -18,6 +20,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsers from './pages/AdminUsers';
+import AdminBlockedDates from './pages/AdminBlockedDates';
 import NotFound from './pages/NotFound';
 
 function Navigation() {
@@ -60,7 +63,7 @@ function Navigation() {
             {user ? (
               <>
                 <span className="nav-text">
-                  Καλώς ήρθατε, {user.username}
+                  Καλώς ήρθατε, {user.name}
                   {user.role === 'ADMIN' && ' (Διαχειριστής)'}
                 </span>
                 <button onClick={handleLogout} className="btn btn-outline">
@@ -177,6 +180,14 @@ function AppContent() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/blocked-dates"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminBlockedDates />
+                  </ProtectedRoute>
+                }
+              />
               
               <Route
                 path="/create-apartment"
@@ -186,7 +197,30 @@ function AppContent() {
                   </ProtectedRoute>
                 }
               />
-              
+              <Route
+                path="/my-apartments"
+                element={
+                  <ProtectedRoute>
+                    <MyApartments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/manage-availability/:apartmentId"
+                element={
+                  <ProtectedRoute>
+                    <ManageAvailability />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-bookings"
+                element={
+                  <ProtectedRoute>
+                    <MyBookings />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/payment" element={<Payment />} />
               <Route path="/404" element={<NotFound />} />
               <Route path="*" element={<Navigate to="/404" replace />} />

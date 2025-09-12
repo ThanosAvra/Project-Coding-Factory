@@ -25,6 +25,7 @@ A full-stack apartment booking application built with Node.js, Express, MongoDB,
 - JWT-based authentication
 - Protected routes and middleware
 - Role-based access control (USER/ADMIN)
+- Admin dashboard with user management
 
 ### Core Functionality
 - Browse apartment listings
@@ -34,6 +35,9 @@ A full-stack apartment booking application built with Node.js, Express, MongoDB,
 - Manage personal bookings
 - Cancel reservations
 - Owner-based apartment management
+- **Availability Management System** - Block dates for maintenance, personal use, etc.
+- Booking conflict detection and prevention
+- Payment integration (mock payment system)
 
 ### UI/UX Features
 - Responsive design
@@ -66,190 +70,186 @@ Project Coding Factory/
 │   │   └── generateToken.js # JWT token generation
 │   ├── app.js             # Main application file
 │   ├── package.json       # Dependencies and scripts
-│   └── .env.template      # Environment variables template
-│
-└── apartment-client/          # Frontend (React)
-    ├── src/
-    │   ├── pages/            # React components/pages
-    │   │   ├── Home.jsx     # Apartment listings
-    │   │   ├── Login.jsx    # User authentication
-    │   │   ├── Register.jsx # User registration
-    │   │   └── axios.js     # Axios instance with interceptors
-    │   ├── App.jsx          # Main React component
-    │   └── main.jsx         # 🏠 Apartment Booking System
-    ├── package.json         # Frontend dependencies
-    └── vite.config.js       # Build tool configuration
-```
+│   └── .env.template      # 🏢 Apartment Booking System
 
-## 🛠️ Installation & Setup
+A modern, full-stack apartment booking application built with Node.js, Express, MongoDB, and React. This system allows users to browse apartments, make bookings, and manage their reservations, while providing administrators with comprehensive management tools.
+
+## 🌟 Key Features
+
+### User Features
+- **Browse Apartments**: View available apartments with photos, amenities, and detailed information
+- **Smart Booking**: Real-time availability checking with visual calendar blocking
+- **User Authentication**: Secure registration and login system with JWT tokens
+- **Booking Management**: Create, view, and manage personal reservations
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+
+### Admin Features
+- **User Management**: View and manage all registered users
+- **Apartment Management**: Full CRUD operations for apartment listings
+- **Booking Oversight**: Monitor all bookings and their statuses
+- **Availability Control**: Block/unblock dates for maintenance or personal use
+- **Admin Dashboard**: Comprehensive system overview and statistics
+
+### Technical Features
+- **RESTful API**: Well-structured API with comprehensive endpoints
+- **Real-time Availability**: Advanced date conflict detection and resolution
+- **Image Upload**: Multiple photo support with automatic compression
+- **Role-based Access**: Secure permissions for users and administrators
+- **API Documentation**: Complete Swagger/OpenAPI documentation
+
+## 🛠️ Technology Stack
+
+### Backend
+- **Node.js & Express.js** - Server runtime and web framework
+- **MongoDB & Mongoose** - Database and object modeling
+- **JWT & bcryptjs** - Authentication and password security
+- **Swagger** - API documentation
+
+### Frontend
+- **React 18 & Vite** - Modern UI library and build tool
+- **React Router** - Client-side routing
+- **Axios** - HTTP client for API communication
+- **React DatePicker** - Advanced date selection with exclusions
+- **Modern CSS** - Responsive design with CSS Grid and Flexbox
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB Atlas account (or local MongoDB)
+- Node.js (v16+)
+- MongoDB Atlas account or local MongoDB
 - Git
 
-### Backend Setup
+### Installation
 
-1. **Navigate to backend directory:**
-   ```bash
-   cd apartment-booking
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Configuration:**
-   - Copy `.env.template` to `.env`
-   - Fill in your MongoDB connection string and JWT secret:
-   ```env
-   MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/apartment-booking
-   JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters
-   PORT=8080
-   ```
-
-4. **Start the backend server:**
-   ```bash
-   npm start
-   # or for development with nodemon:
-   npm run dev
-   ```
-
-   The backend will run on `http://localhost:8080`
-
-### Frontend Setup
-
-1. **Navigate to frontend directory:**
-   ```bash
-   cd apartment-client
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-
-   The frontend will run on `http://localhost:5173`
-
-## 🔧 Build & Deployment
-
-### Backend Deployment
+1. **Clone and setup backend:**
 ```bash
+git clone <repository-url>
 cd apartment-booking
-npm install --production
-node app.js
+npm install
+cp .env.example .env
+# Edit .env with your MongoDB URI and JWT secret
+npm start
 ```
 
-### Frontend Build
+2. **Setup frontend (new terminal):**
 ```bash
 cd apartment-client
-npm run build
-# Built files will be in the 'dist' directory
+npm install
+npm run dev
 ```
 
-### Environment Variables for Production
-Ensure the following environment variables are set:
-- `MONGO_URI`: MongoDB connection string
-- `JWT_SECRET`: Secret key for JWT tokens (minimum 32 characters)
-- `PORT`: Server port (default: 8080)
-- `NODE_ENV`: Set to 'production' for production builds
+3. **Access the application:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8080
+- API Documentation: http://localhost:8080/api-docs
 
-## 📡 API Endpoints
+## 📋 Environment Configuration
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
+Create `.env` file in the `apartment-booking` directory:
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_jwt_secret
+PORT=8080
+```
 
-### Apartments
-- `GET /api/apartments` - List all apartments
-- `GET /api/apartments/:id` - Get specific apartment
-- `POST /api/apartments` - Create new apartment (authenticated)
-- `PUT /api/apartments/:id` - Update apartment (owner only)
-- `DELETE /api/apartments/:id` - Delete apartment (owner only)
+## 👤 Admin Access
 
-### Bookings
-- `GET /api/bookings` - Get user's bookings (authenticated)
-- `POST /api/bookings` - Create new booking (authenticated)
-- `DELETE /api/bookings/:id` - Cancel booking (authenticated)
+Create an admin account for testing:
+```bash
+cd apartment-booking
+node create-admin.js
+```
 
-### Users
-- `POST /api/users` - Create user (alternative registration)
+Default admin credentials (if available):
+- Email: admin@example.com
+- Password: admin123
+
+## 📚 API Documentation
+
+Complete API documentation is available at `/api-docs` when the server is running.
+
+### Core Endpoints
+- **Authentication**: `/api/users/*` - Registration, login, profile
+- **Apartments**: `/api/apartments/*` - CRUD operations for listings
+- **Bookings**: `/api/bookings/*` - Reservation management
+- **Availability**: `/api/availability/*` - Date blocking and checking
+
+## 🏗️ Project Architecture
+
+```
+Project Coding Factory/
+├── apartment-booking/          # Backend (Node.js + Express + MongoDB)
+│   ├── config/                 # Database and service configurations
+│   ├── controllers/            # Business logic
+│   ├── models/                 # MongoDB schemas
+│   ├── routes/                 # API endpoints
+│   └── app.js                  # Main server file
+├── apartment-client/           # Frontend (React + Vite)
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   ├── pages/              # Page components
+│   │   ├── context/            # React context providers
+│   │   └── api/                # API configuration
+└── README.md                   # This documentation
+```
 
 ## 🧪 Testing
 
-### Manual Testing
-1. Register a new user account
-2. Login with credentials
-3. Browse available apartments
-4. Make a booking with date selection
-5. View bookings in "My Bookings" page
-6. Cancel a booking
+### Backend Testing
+```bash
+cd apartment-booking
+npm test
+```
 
-### API Testing with Postman
-Import the API endpoints and test:
-- Authentication flow
-- CRUD operations for apartments
-- Booking creation and management
-- Error handling and validation
+### API Testing
+Import the Postman collection: `Apartment-Booking-API.postman_collection.json`
 
-## 🔐 Security Features
-
-- Password hashing with bcrypt
-- JWT token-based authentication
-- Protected routes with middleware
-- Input validation and sanitization
-- CORS configuration
-- Environment variable protection
-
-## 🎨 UI/UX Features
-
-- Modern gradient designs
-- Responsive layout for all devices
-- Loading states and error feedback
-- Form validation with user-friendly messages
-- Interactive hover effects
-- Greek language localization
-
-## 📚 Technologies Used
+## 🚀 Deployment
 
 ### Backend
-- **Node.js**: JavaScript runtime
-- **Express.js**: Web framework
-- **MongoDB**: NoSQL database
-- **Mongoose**: MongoDB ODM
-- **bcryptjs**: Password hashing
-- **jsonwebtoken**: JWT authentication
-- **cors**: Cross-origin resource sharing
-- **dotenv**: Environment variable management
+1. Deploy to Heroku, Railway, or similar platform
+2. Set environment variables in hosting platform
+3. Connect to MongoDB Atlas
 
 ### Frontend
-- **React**: UI library
-- **Vite**: Build tool and dev server
-- **React Router**: Client-side routing
-- **Axios**: HTTP client
-- **CSS-in-JS**: Styling approach
+1. Build production version: `npm run build`
+2. Deploy to Netlify, Vercel, or GitHub Pages
+3. Update API base URL in production
 
-## 🚀 Future Enhancements
+## 🎯 Key Implementation Highlights
 
-- Image upload for apartments
-- Advanced search and filtering
-- Payment integration
-- Email notifications
-- Admin dashboard
-- Review and rating system
-- Calendar availability view
-- Multi-language support
+- **Smart Date Blocking**: Visual calendar exclusions for booked/blocked dates
+- **Conflict Detection**: Prevents double bookings with real-time validation
+- **Image Handling**: Base64 encoding with automatic compression
+- **Security**: JWT authentication with role-based access control
+- **User Experience**: Toast notifications and loading states
+- **Responsive Design**: Mobile-first approach with modern CSS
 
-## 👨‍💻 Developer
+## 📝 Development Notes
 
-**Thanos Avramidis**  
-Coding Factory Final Project - 2025
+This project demonstrates:
+- Full-stack JavaScript development
+- RESTful API design and implementation
+- Modern React patterns and hooks
+- Database modeling and relationships
+- Authentication and authorization systems
+- File upload and image handling
+- Real-time data validation
+- Responsive web design principles
+
+## 🆘 Troubleshooting
+
+Common issues and solutions:
+1. **MongoDB Connection**: Verify MONGO_URI in .env file
+2. **JWT Errors**: Ensure JWT_SECRET is set and consistent
+3. **CORS Issues**: Check API base URL in frontend configuration
+4. **Port Conflicts**: Modify PORT in .env if 8080 is occupied
+
+---
+
+**Built for the Coding Factory Program - Final Project Submission**
+
+*This application showcases modern web development practices and full-stack JavaScript expertise.*
 
 ## 📄 License
 

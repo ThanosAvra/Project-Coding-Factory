@@ -1,7 +1,7 @@
 // routes/users.js
 const express = require('express');
 const router = express.Router();
-const { register, login, getMe, updateUserProfile, getUsers, promoteToAdmin, createFirstAdmin } = require('../controllers/userController');
+const { register, login, getMe, updateUserProfile, getUsers, promoteToAdmin, createFirstAdmin, updateUser, deleteUser } = require('../controllers/userController');
 const { auth } = require('../middleware/auth');
 
 // @route   POST /api/users/register
@@ -29,14 +29,24 @@ router.get('/me', auth(), getMe);
 // @access  Private
 router.put('/profile', auth(), updateUserProfile);
 
+// @route   GET /api/users
+// @desc    Get all users (Admin only)
+// @access  Private/Admin
+router.get('/', auth(['ADMIN']), getUsers);
+
 // @route   PUT /api/users/promote/:id
 // @desc    Promote user to admin
 // @access  Private/Admin
 router.put('/promote/:id', auth(['ADMIN']), promoteToAdmin);
 
-// @route   GET /api/users
-// @desc    Get all users (Admin only)
+// @route   PUT /api/users/:id
+// @desc    Update user (Admin only)
 // @access  Private/Admin
-router.get('/', auth(['ADMIN']), getUsers);
+router.put('/:id', auth(['ADMIN']), updateUser);
+
+// @route   DELETE /api/users/:id
+// @desc    Delete user (Admin only)
+// @access  Private/Admin
+router.delete('/:id', auth(['ADMIN']), deleteUser);
 
 module.exports = router;

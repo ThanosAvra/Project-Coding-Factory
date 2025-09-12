@@ -1,0 +1,202 @@
+/* Custom DatePicker Styles για αποκλεισμένες ημερομηνίες */
+
+/* Αποκλεισμένες ημερομηνίες - γκρίζες και με διαγώνια γραμμή */
+.react-datepicker__day--excluded {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  text-decoration: line-through !important;
+  cursor: not-allowed !important;
+  position: relative;
+}
+
+.react-datepicker__day--excluded:hover {
+  background-color: #dee2e6 !important;
+  color: #495057 !important;
+}
+
+/* Εναλλακτικό styling - μαύρο background */
+.react-datepicker__day--disabled {
+  background-color: #343a40 !important;
+  color: #ffffff !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: #495057 !important;
+}
+
+/* Styling για ημερομηνίες που δεν είναι διαθέσιμες */
+.react-datepicker__day--unavailable {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  color: white !important;
+  font-weight: bold !important;
+  cursor: not-allowed !important;
+  position: relative;
+}
+
+.react-datepicker__day--unavailable:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%) !important;
+  transform: none !important;
+}
+
+/* Προσθήκη X icon για αποκλεισμένες ημερομηνίες */
+.react-datepicker__day--unavailable::after {
+  content: '✕';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  color: white;
+  font-weight: bold;
+}
+
+/* Κρύψιμο του αριθμού ημέρας για αποκλεισμένες ημερομηνίες */
+.react-datepicker__day--unavailable .react-datepicker__day-name {
+  opacity: 0;
+}
+
+/* Tooltip για αποκλεισμένες ημερομηνίες */
+.react-datepicker__day--excluded,
+.react-datepicker__day--disabled,
+.react-datepicker__day--unavailable {
+  position: relative;
+}
+
+.react-datepicker__day--excluded::before,
+.react-datepicker__day--disabled::before,
+.react-datepicker__day--unavailable::before {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 1000;
+}
+
+.react-datepicker__day--excluded:hover::before,
+.react-datepicker__day--disabled:hover::before,
+.react-datepicker__day--unavailable:hover::before {
+  opacity: 1;
+}
+
+/* Βελτιωμένο styling για το DatePicker container */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.react-datepicker__input-container input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Styling για το ημερολόγιο */
+.react-datepicker {
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-bottom: none;
+  color: white;
+  padding: 1rem;
+}
+
+.react-datepicker__current-month {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.react-datepicker__day-name {
+  color: white;
+  font-weight: 500;
+}
+
+/* Κανονικές διαθέσιμες ημερομηνίες */
+.react-datepicker__day:not(.react-datepicker__day--excluded):not(.react-datepicker__day--disabled):not(.react-datepicker__day--unavailable) {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__day:not(.react-datepicker__day--excluded):not(.react-datepicker__day--disabled):not(.react-datepicker__day--unavailable):hover {
+  background-color: #007bff;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Selected dates */
+.react-datepicker__day--selected {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+  border-radius: 6px;
+}
+
+.react-datepicker__day--in-range {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  color: white !important;
+}
+
+/* Legend για τους χρήστες */
+.datepicker-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.legend-available {
+  background-color: #ffffff;
+}
+
+.legend-unavailable {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.legend-selected {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}

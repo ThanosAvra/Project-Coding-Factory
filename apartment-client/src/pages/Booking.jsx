@@ -6,6 +6,7 @@ import { useUser } from '../context/UserContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import '../styles/DatePicker.css';
 
 function Booking() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ function Booking() {
   const [endDate, setEndDate] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [unavailableDates, setUnavailableDates] = useState([]);
 
   useEffect(() => {
     const fetchApartment = async () => {
@@ -26,6 +28,9 @@ function Booking() {
         const response = await axios.get(`/apartments/${id}`);
         setApartment(response.data);
         setError(null);
+        
+        // Fetch unavailable dates
+        await fetchUnavailableDates(id);
       } catch (err) {
         console.error('Error fetching apartment:', err);
         setError('Δεν ήταν δυνατή η φόρτωση του διαμερίσματος');
@@ -38,15 +43,57 @@ function Booking() {
     fetchApartment();
   }, [id]);
 
+  const fetchUnavailableDates = async (apartmentId) => {
+    try {
+      // Χρήση του νέου API endpoint για λήψη μη διαθέσιμων ημερομηνιών
+      const response = await axios.get(`/apartments/${apartmentId}/unavailable-dates`);
+      const unavailableDateStrings = response.data.unavailableDates;
+      
+      // Μετατροπή των string ημερομηνιών σε Date objects
+      const unavailableDateObjects = unavailableDateStrings.map(dateStr => new Date(dateStr));
+      
+      setUnavailableDates(unavailableDateObjects);
+    } catch (error) {
+      console.error('Σφάλμα φόρτωσης μη διαθέσιμων ημερομηνιών:', error);
+      // Σε περίπτωση σφάλματος, κρατάμε κενό array
+      setUnavailableDates([]);
+    }
+  };
+
   useEffect(() => {
     if (startDate && endDate && apartment) {
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       setTotalPrice(diffDays * apartment.pricePerNight);
+      
+      // Check availability when dates are selected
+      checkAvailability();
     } else {
       setTotalPrice(0);
     }
   }, [startDate, endDate, apartment]);
+
+  const checkAvailability = async () => {
+    if (!startDate || !endDate || !apartment) return true;
+
+    try {
+      const response = await axios.get(`/availability/check/${apartment._id}`, {
+        params: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        }
+      });
+
+      if (!response.data.available) {
+        toast.error('Οι επιλεγμένες ημερομηνίες δεν είναι διαθέσιμες για κράτηση');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      toast.error('Σφάλμα κατά τον έλεγχο διαθεσιμότητας');
+      return false;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,6 +107,12 @@ function Booking() {
     if (!startDate || !endDate) {
       toast.warning('Παρακαλώ επιλέξτε ημερομηνίες κράτησης');
       return;
+    }
+
+    // Check availability before proceeding
+    const isAvailable = await checkAvailability();
+    if (!isAvailable) {
+      return; // Error message already shown in checkAvailability
     }
 
     setSubmitting(true);
@@ -185,6 +238,19 @@ function Booking() {
                   startDate={startDate}
                   endDate={endDate}
                   minDate={new Date()}
+                  excludeDates={unavailableDates}
+                  filterDate={(date) => {
+                    const isExcluded = unavailableDates.some(excludedDate => 
+                      excludedDate.toDateString() === date.toDateString()
+                    );
+                    return !isExcluded;
+                  }}
+                  dayClassName={(date) => {
+                    const isUnavailable = unavailableDates.some(unavailableDate => 
+                      unavailableDate.toDateString() === date.toDateString()
+                    );
+                    return isUnavailable ? 'react-datepicker__day--unavailable' : '';
+                  }}
                   placeholderText="Επιλέξτε ημερομηνία άφιξης"
                   className="form-input"
                   required
@@ -200,10 +266,39 @@ function Booking() {
                   startDate={startDate}
                   endDate={endDate}
                   minDate={startDate || new Date()}
+                  excludeDates={unavailableDates}
+                  filterDate={(date) => {
+                    const isExcluded = unavailableDates.some(excludedDate => 
+                      excludedDate.toDateString() === date.toDateString()
+                    );
+                    return !isExcluded;
+                  }}
+                  dayClassName={(date) => {
+                    const isUnavailable = unavailableDates.some(unavailableDate => 
+                      unavailableDate.toDateString() === date.toDateString()
+                    );
+                    return isUnavailable ? 'react-datepicker__day--unavailable' : '';
+                  }}
                   placeholderText="Επιλέξτε ημερομηνία αναχώρησης"
                   className="form-input"
                   required
                 />
+              </div>
+
+              {/* Legend για τα χρώματα του ημερολογίου */}
+              <div className="datepicker-legend">
+                <div className="legend-item">
+                  <div className="legend-color legend-available"></div>
+                  <span>✅ Διαθέσιμες ημερομηνίες</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-color legend-unavailable"></div>
+                  <span>❌ Μη διαθέσιμες ημερομηνίες</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-color legend-selected"></div>
+                  <span>📅 Επιλεγμένες ημερομηνίες</span>
+                </div>
               </div>
 
               {totalPrice > 0 && (

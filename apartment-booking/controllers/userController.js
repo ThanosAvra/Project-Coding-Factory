@@ -293,12 +293,19 @@ exports.deleteUser = async (req, res) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res) => {
   try {
+    console.log('=== UPDATE USER DEBUG ===');
+    console.log('User ID:', req.params.id);
+    console.log('Request body:', req.body);
+    console.log('User making request:', req.user);
+    
     const { name, email, role } = req.body;
     
     const userFields = {};
     if (name) userFields.name = name;
     if (email) userFields.email = email;
     if (role) userFields.role = role;
+
+    console.log('User fields to update:', userFields);
 
     let user = await User.findByIdAndUpdate(
       req.params.id,
@@ -307,12 +314,14 @@ exports.updateUser = async (req, res) => {
     ).select('-passwordHash');
 
     if (!user) {
+      console.log('User not found with ID:', req.params.id);
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('Updated user:', user);
     res.json(user);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Update user error:', err.message);
+    res.status(500).json({ message: 'Server Error', error: err.message });
   }
 };

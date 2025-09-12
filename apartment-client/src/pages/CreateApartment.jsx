@@ -19,8 +19,8 @@ function CreateApartment() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (user && user.role !== 'admin') {
-      navigate('/unauthorized');
+    if (user && user.role !== 'ADMIN') {
+      navigate('/404');
     }
   }, [user, navigate]);
 

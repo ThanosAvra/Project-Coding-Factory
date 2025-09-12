@@ -15,8 +15,8 @@ export const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   // Check if admin access is required
-  if (requireAdmin && user.role !== 'admin') {
-    return <Navigate to="/unauthorized" replace />;
+  if (requireAdmin && user.role !== 'ADMIN') {
+    return <Navigate to="/404" replace />;
   }
 
   return children;

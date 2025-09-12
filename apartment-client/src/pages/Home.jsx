@@ -25,6 +25,10 @@ export default function Home() {
       });
   }, []);
 
+  const handleViewDetails = (apartmentId) => {
+    navigate(`/apartments/${apartmentId}`);
+  };
+
   const handleBooking = (apartmentId) => {
     if (!user) {
       toast.warning('Παρακαλώ συνδεθείτε πρώτα');
@@ -36,27 +40,17 @@ export default function Home() {
 
   const isOwner = (apartment) => {
     if (!user) {
-      console.log('No current user');
       return false;
     }
     
     const userId = user.id || user._id;
     const ownerId = apartment.owner?._id || apartment.owner;
     
-    console.log('Checking ownership:', {
-      userId,
-      ownerId,
-      apartmentId: apartment._id,
-      user
-    });
-    
     return ownerId === userId;
   };
 
   const isAdmin = () => {
-    const isAdmin = user?.role === 'ADMIN';
-    console.log('Is admin:', isAdmin, 'User role:', user?.role);
-    return isAdmin;
+    return user?.role === 'ADMIN';
   };
 
   const handleDelete = async (apartmentId) => {
@@ -68,20 +62,12 @@ export default function Home() {
       setDeletingId(apartmentId);
       const token = localStorage.getItem('token');
       
-      console.log('=== Delete Debug ===');
-      console.log('Apartment ID:', apartmentId);
-      console.log('Current User ID:', user?.id);
-      console.log('User Role:', user?.role);
-      console.log('Token exists:', !!token);
-      
       const response = await axios.delete(`/apartments/${apartmentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
-      
-      console.log('Delete response:', response.data);
       
       // Update the UI by filtering out the deleted apartment
       setApartments(prev => prev.filter(apt => apt._id !== apartmentId));
@@ -272,6 +258,13 @@ export default function Home() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                  <button
+                    onClick={() => handleViewDetails(apartment._id)}
+                    className="btn btn-outline-primary"
+                    style={{ flex: 1 }}
+                  >
+                    Προβολή
+                  </button>
                   <button
                     onClick={() => handleBooking(apartment._id)}
                     className="btn btn-primary"
