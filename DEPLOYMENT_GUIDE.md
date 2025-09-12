@@ -1,4 +1,4 @@
-# 🚀 Apartment Booking System - Deployment Guide
+#  Apartment Booking System - Deployment Guide
 
 ## Quick Start (Development)
 
@@ -31,7 +31,7 @@ npm run dev
 - **Password**: admin123
 - **Dashboard**: http://localhost:5173/admin
 
-## 🎯 Key Features Tested & Working
+##  Key Features Tested & Working
 
 ### ✅ Authentication System
 - User registration/login
@@ -63,7 +63,7 @@ npm run dev
 - System statistics
 - Database viewer
 
-## 🧪 Testing Commands
+##  Testing Commands
 
 Run these to verify system functionality:
 
@@ -81,7 +81,6 @@ node test-admin-features.js
 node final-test.js
 ```
 
-## 📋 Coding Factory Requirements Met
 
 - ✅ **Domain Model**: User, Apartment, Booking, Availability entities
 - ✅ **Database**: MongoDB Atlas with proper schemas
@@ -93,6 +92,3 @@ node final-test.js
 - ✅ **Error Handling**: Comprehensive error management
 - ✅ **Security**: Password hashing, JWT tokens, input validation
 
-## 🎉 Ready for Submission!
-
-Your apartment booking system is complete and ready for the Coding Factory final project submission. All core requirements plus advanced features like availability management are implemented and tested.

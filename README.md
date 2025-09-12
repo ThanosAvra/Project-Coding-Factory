@@ -1,10 +1,10 @@
-# Apartment Booking System - Coding Factory Final Project
 
-## 📋 Project Overview
+
+##  Project Overview
 
 A full-stack apartment booking application built with Node.js, Express, MongoDB, and React. This system allows users to register, browse apartments, make bookings, and manage their reservations with a complete authentication and authorization system.
 
-## 🏗️ Architecture & Domain Model
+##  Architecture & Domain Model
 
 ### Domain Entities
 - **User**: Authentication and user management
@@ -18,7 +18,7 @@ A full-stack apartment booking application built with Node.js, Express, MongoDB,
 - **Authentication**: JWT (JSON Web Tokens)
 - **Styling**: CSS-in-JS with modern UI components
 
-## 🚀 Features
+##  Features
 
 ### Authentication & Authorization
 - User registration and login
@@ -46,7 +46,7 @@ A full-stack apartment booking application built with Node.js, Express, MongoDB,
 - Greek language support
 - Interactive hover effects
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 Project Coding Factory/
@@ -74,7 +74,7 @@ Project Coding Factory/
 
 A modern, full-stack apartment booking application built with Node.js, Express, MongoDB, and React. This system allows users to browse apartments, make bookings, and manage their reservations, while providing administrators with comprehensive management tools.
 
-## 🌟 Key Features
+##  Key Features
 
 ### User Features
 - **Browse Apartments**: View available apartments with photos, amenities, and detailed information
@@ -112,7 +112,7 @@ A modern, full-stack apartment booking application built with Node.js, Express, 
 - **React DatePicker** - Advanced date selection with exclusions
 - **Modern CSS** - Responsive design with CSS Grid and Flexbox
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js (v16+)
@@ -143,7 +143,7 @@ npm run dev
 - Backend API: http://localhost:8080
 - API Documentation: http://localhost:8080/api-docs
 
-## 📋 Environment Configuration
+##  Environment Configuration
 
 Create `.env` file in the `apartment-booking` directory:
 ```env
@@ -152,7 +152,7 @@ JWT_SECRET=your_secure_jwt_secret
 PORT=8080
 ```
 
-## 👤 Admin Access
+##  Admin Access
 
 Create an admin account for testing:
 ```bash
@@ -164,7 +164,7 @@ Default admin credentials (if available):
 - Email: admin@example.com
 - Password: admin123
 
-## 📚 API Documentation
+##  API Documentation
 
 Complete API documentation is available at `/api-docs` when the server is running.
 
@@ -174,7 +174,7 @@ Complete API documentation is available at `/api-docs` when the server is runnin
 - **Bookings**: `/api/bookings/*` - Reservation management
 - **Availability**: `/api/availability/*` - Date blocking and checking
 
-## 🏗️ Project Architecture
+##  Project Architecture
 
 ```
 Project Coding Factory/
@@ -193,7 +193,7 @@ Project Coding Factory/
 └── README.md                   # This documentation
 ```
 
-## 🧪 Testing
+##  Testing
 
 ### Backend Testing
 ```bash
@@ -204,7 +204,7 @@ npm test
 ### API Testing
 Import the Postman collection: `Apartment-Booking-API.postman_collection.json`
 
-## 🚀 Deployment
+##  Deployment
 
 ### Backend
 1. Deploy to Heroku, Railway, or similar platform
@@ -216,7 +216,7 @@ Import the Postman collection: `Apartment-Booking-API.postman_collection.json`
 2. Deploy to Netlify, Vercel, or GitHub Pages
 3. Update API base URL in production
 
-## 🎯 Key Implementation Highlights
+##  Key Implementation Highlights
 
 - **Smart Date Blocking**: Visual calendar exclusions for booked/blocked dates
 - **Conflict Detection**: Prevents double bookings with real-time validation
@@ -225,7 +225,7 @@ Import the Postman collection: `Apartment-Booking-API.postman_collection.json`
 - **User Experience**: Toast notifications and loading states
 - **Responsive Design**: Mobile-first approach with modern CSS
 
-## 📝 Development Notes
+##  Development Notes
 
 This project demonstrates:
 - Full-stack JavaScript development
@@ -237,7 +237,7 @@ This project demonstrates:
 - Real-time data validation
 - Responsive web design principles
 
-## 🆘 Troubleshooting
+##  Troubleshooting
 
 Common issues and solutions:
 1. **MongoDB Connection**: Verify MONGO_URI in .env file
@@ -251,12 +251,9 @@ Common issues and solutions:
 
 *This application showcases modern web development practices and full-stack JavaScript expertise.*
 
-## 📄 License
+##  License
 
 This project is developed as part of the Coding Factory program and is intended for educational purposes.
 
 ---
 
-**Submission Date**: September 5, 2025  
-**GitHub Repository**: [Link to be added]  
-**Live Demo**: [Link to be added if deployed]

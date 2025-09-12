@@ -1,9 +1,9 @@
-# 🏢 Apartment Booking System - Project Structure
+#  Apartment Booking System - Project Structure
 
-## 📁 Project Overview
+##  Project Overview
 This is a full-stack apartment booking application built with Node.js/Express backend and React frontend.
 
-## 🗂️ Directory Structure
+##  Directory Structure
 
 ```
 Project Coding Factory/
@@ -35,7 +35,7 @@ Project Coding Factory/
 └── PROJECT_STRUCTURE.md        # This file
 ```
 
-## 🚀 Key Features
+##  Key Features
 
 ### Backend Features
 - **Authentication & Authorization**: JWT-based auth with role-based access (USER/ADMIN)
@@ -54,7 +54,7 @@ Project Coding Factory/
 - **Admin Interface**: Administrative functions for managing users and bookings
 - **Toast Notifications**: User-friendly feedback system
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Backend
 - **Runtime**: Node.js
@@ -122,7 +122,7 @@ npm install
 npm run dev
 ```
 
-## 🎯 Key Implementation Details
+##  Key Implementation Details
 
 ### Security
 - Passwords hashed with bcrypt
@@ -142,7 +142,7 @@ npm run dev
 - Visual feedback with toast notifications
 - Intuitive navigation and form validation
 
-## 📝 Development Notes
+##  Development Notes
 
 This project demonstrates:
 - Full-stack JavaScript development
