@@ -108,12 +108,13 @@ function Register() {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                border: '2px solid #e5e7eb',
+                border: '2px solid #d1d5db',
                 borderRadius: '8px',
                 fontSize: '1rem',
                 transition: 'all 0.2s ease',
                 outline: 'none',
-                backgroundColor: '#f9fafb'
+                backgroundColor: 'white',
+                color: '#374151'
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = '#667eea';
@@ -121,8 +122,8 @@ function Register() {
                 e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb';
-                e.target.style.backgroundColor = '#f9fafb';
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.backgroundColor = 'white';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -152,12 +153,13 @@ function Register() {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                border: '2px solid #e5e7eb',
+                border: '2px solid #d1d5db',
                 borderRadius: '8px',
                 fontSize: '1rem',
                 transition: 'all 0.2s ease',
                 outline: 'none',
-                backgroundColor: '#f9fafb'
+                backgroundColor: 'white',
+                color: '#374151'
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = '#667eea';
@@ -165,8 +167,8 @@ function Register() {
                 e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb';
-                e.target.style.backgroundColor = '#f9fafb';
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.backgroundColor = 'white';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -197,13 +199,13 @@ function Register() {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                border: '2px solid #e5e7eb',
+                border: '2px solid #d1d5db',
                 borderRadius: '8px',
                 fontSize: '1rem',
                 transition: 'all 0.2s ease',
                 outline: 'none',
-                backgroundColor: '#f9fafb',
-                color: '#1f2937',
+                backgroundColor: 'white',
+                color: '#374151',
                 fontWeight: '600',
                 letterSpacing: '0.1em'
               }}
@@ -213,8 +215,8 @@ function Register() {
                 e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb';
-                e.target.style.backgroundColor = '#f9fafb';
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.backgroundColor = 'white';
                 e.target.style.boxShadow = 'none';
               }}
             />
